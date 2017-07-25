@@ -1,0 +1,11 @@
+// Author {{.author}}
+// Cur dir is {{.curdir}}
+
+package main
+
+import(
+	"fmt"
+)
+func main() {
+	fmt.Print("Hello {{.author}}")
+}

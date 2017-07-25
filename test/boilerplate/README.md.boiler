@@ -1,0 +1,4 @@
+Project {{.projname}}
+===================
+
+Author {{.author}}

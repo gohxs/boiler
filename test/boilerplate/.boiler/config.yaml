@@ -1,0 +1,11 @@
+version: 1
+vars:
+  author:
+    question: Ask something about author
+  description:
+    question: Ask about project description
+generators:
+  - gofile:
+      path: curdir
+      src: gofile.go.boiler
+
