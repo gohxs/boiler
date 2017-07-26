@@ -1,5 +1,6 @@
 // Author {{.author}}
 // Cur dir is {{.curdir}}
+// The project is {{.description}}
 
 package main
 
@@ -7,5 +8,5 @@ import(
 	"fmt"
 )
 func main() {
-	fmt.Print("Hello {{.author}}")
+	fmt.Print("Hello {{.author}} this is an {{.description}} app")
 }

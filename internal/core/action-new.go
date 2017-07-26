@@ -13,18 +13,19 @@ import (
 
 	"github.com/urfave/cli"
 	git "gopkg.in/src-d/go-git.v4"
+	yaml "gopkg.in/yaml.v2"
 )
 
-func commandInit() cli.Command {
+func commandNew() cli.Command {
 	return cli.Command{
-		Name:      "init",
-		Aliases:   []string{"i"},
-		ArgsUsage: "[repository] [projname]",
+		Name:      "new",
+		ArgsUsage: "[repository/source] [projname]",
 		Usage:     "Initialize the boilerplate",
-		Action:    actionInit,
+		Action:    actionNew,
 	}
 }
-func actionInit(c *cli.Context) error {
+
+func actionNew(c *cli.Context) error {
 
 	if c.NArg() < 2 {
 		return cli.ShowCommandHelp(c, "init")
@@ -58,29 +59,42 @@ func actionInit(c *cli.Context) error {
 	}
 
 	// Template data
-	data := map[string]interface{}{}
 
 	//////////////////////
 	// Method for this
 	//////
-	cfg, err := config.FromFile(filepath.Join(srcdir, ".boiler", "config.yaml"))
+	cfg, err := config.FromFile(filepath.Join(srcdir, ".boiler", "config.yml"))
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
+	udata := map[string]interface{}{} // UserVars
 	if cfg != nil {
 		// Data questions
 		in := bufio.NewReader(stdin)
-		for k, v := range cfg.Vars {
-			fmt.Printf("%s? ", v.Question)
+		for _, v := range cfg.UserVars {
+			// User interaction
+			fmt.Printf("[%s] %s (%s)? ", v.Name, v.Question, v.Default)
 			d, _, _ := in.ReadLine()
-			data[k] = string(d)
+			str := string(d)
+			if str == "" {
+				udata[v.Name] = v.Default
+			} else {
+				udata[v.Name] = str
+			}
 		}
+	}
+	udata["projname"] = name
+	// Store data in boiler folder
+
+	// Place this somewhere that loads defaults
+	data := map[string]interface{}{} // Merge user data with data
+	for k, v := range udata {
+		data[k] = v
 	}
 
 	// Setup global template vars
 	data["projroot"], _ = filepath.Abs(name)
-	data["curdir"], _ = os.Getwd()
-	data["projname"] = name
+	data["curdir"], _ = os.Getwd() // Not good?
 
 	// Setup vars
 	err = ProcessDir(srcdir, name, data)
@@ -88,6 +102,15 @@ func actionInit(c *cli.Context) error {
 		return err
 	}
 	fmt.Println("Created project:", name)
+	ydata, err := yaml.Marshal(udata)
+	if err != nil {
+		return err
+	}
+	//mkdir all .boiler in case it does not exists
+	boilerPath := filepath.Join(name, ".boiler")
+	os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error
 
-	return nil
+	err = ioutil.WriteFile(filepath.Join(boilerPath, "user.yml"), ydata, os.FileMode(0644))
+
+	return err
 }

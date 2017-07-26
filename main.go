@@ -12,6 +12,7 @@ import (
 
 func main() {
 	app := core.NewApp(os.Stdin)
+	app.Version = Version
 	err := app.Run(os.Args)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 
 	yaml "gopkg.in/yaml.v2"
@@ -9,15 +10,19 @@ import (
 
 // Config boiler.yaml
 type Config struct {
-	Vars map[string]Var `yaml:"vars"`
+	UserVars   Vars                 `yaml:"vars"`
+	Generators map[string]Generator `yaml:"generators"`
 }
-
-type Var struct {
-	Question string `yaml:"question"`
+type Generator struct {
+	Target string   `yaml:"target"`
+	Source string   `yaml:"source"`
+	Flags  []string `yaml:"flags"`
+	Ext    string   `yaml:"ext"`
 }
 
 // FromFile load config from file
 func FromFile(configPath string) (*Config, error) {
+	log.Println("Reading config file:", configPath)
 	// Check for file or ignore
 	configFile, err := os.Open(configPath)
 	if err != nil {
@@ -28,7 +33,10 @@ func FromFile(configPath string) (*Config, error) {
 		return nil, err
 	}
 	config := Config{}
-	yaml.Unmarshal(configData, &config)
+	err = yaml.Unmarshal(configData, &config)
+	if err != nil {
+		return nil, err
+	}
 
 	return &config, nil
 

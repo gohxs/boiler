@@ -1,0 +1,13 @@
+vars:
+  author: 
+    question: Ask something about author
+  description: 
+    default: Awesome app
+    question: Ask something about description
+generators:
+  gofile:
+    target: "{{.curdir}}/{{.name}}"
+    source: gofile.go.boiler
+    ext: go # for files only
+    flags: ["package"]
+
