@@ -5,12 +5,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/gohxs/boiler/internal/core"
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile | log.Ltime)
 	app := core.NewApp(os.Stdin)
 	app.Version = Version
 	err := app.Run(os.Args)

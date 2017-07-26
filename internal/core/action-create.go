@@ -37,8 +37,6 @@ func commandCreate() cli.Command {
 		data["projroot"] = projroot
 
 		// Building subcommands
-		log.Println("Sub things:", data)
-		log.Println("Loading generators:", cfg.Generators)
 		for k, v := range cfg.Generators {
 			flagSet := []cli.Flag{}
 			// Build flag:
@@ -50,17 +48,22 @@ func commandCreate() cli.Command {
 				}
 				flagSet = append(flagSet, fl)
 			}
+			gen := v
 			cmd := cli.Command{
 				Name:  k,
-				Usage: v.Target,
+				Usage: v.Desc,
 				Flags: flagSet,
 				Action: func(c *cli.Context) error {
+					log.Println("Source generator:", c.Command.Name)
 					if c.NArg() == 0 {
-						cli.ShowCommandHelp(c, k)
+						cli.ShowCommandHelp(c, c.Command.Name)
 						return err
 					}
+
 					var targetFile string
+					// Command specific data
 					data["name"] = c.Args().Get(0)
+					// Fetch flag names or ask user?
 					for _, f := range c.FlagNames() {
 						if !c.IsSet(f) {
 							continue // Is required? or ask?
@@ -68,30 +71,40 @@ func commandCreate() cli.Command {
 						log.Println("Loding value for:", f)
 						data[f] = c.String(f)
 					}
-					{
+
+					// Each file
+					for _, f := range gen.Files {
 						buf := bytes.NewBuffer([]byte{})
-						t, err := template.New("l").Parse(v.Target)
+						t, err := template.New("l").Parse(f.Target)
 						if err != nil {
 							return err
 						}
 						t.Execute(buf, data)
+						ext := filepath.Ext(f.Source)
 						targetFile = buf.String()
-					}
-					if !strings.HasSuffix(targetFile, v.Ext) {
-						targetFile += "." + v.Ext
-					}
-					log.Println("Create file:", targetFile)
-					// Read boiler file
-					// check if dir or file
-					ProcessFile(filepath.Join(projroot, ".boiler", "templates", v.Source), targetFile, data)
+						if ext == ".boiler" {
+							ext = filepath.Ext(f.Source[:len(f.Source)-7])
+						}
 
+						log.Println("Ext is :", ext)
+						if !strings.HasSuffix(targetFile, ext) {
+							targetFile += ext
+						}
+						srcPath := filepath.Join(projroot, ".boiler", "templates", f.Source)
+						log.Println("Processing file:", srcPath, " to ", targetFile)
+						ProcessPath(srcPath, targetFile, data)
+
+					}
+					// Pass target through template
+					///////////
+					// Append ext if none
+					/////
 					return nil
 				},
 			}
 			subCommands = append(subCommands, cmd)
 		}
 	}
-	log.Printf("Sub commands: %v", subCommands)
 
 	return cli.Command{
 		Name:        "create",
@@ -109,7 +122,7 @@ func solveProjRoot(start string) string {
 	cwd := path.Clean(start)
 	for f := cwd; f != ""; cwd, f = path.Split(cwd) {
 		cwd = path.Clean(cwd)
-		log.Println("Cwd", cwd)
+		//log.Println("Cwd", cwd)
 		boilerpath := path.Join(cwd, ".boiler")
 		st, err := os.Stat(boilerpath)
 		if err == nil && st.IsDir() { // ignore error

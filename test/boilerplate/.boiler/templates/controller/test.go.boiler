@@ -1,0 +1,6 @@
+package {{.name}}
+
+// Controller thing
+func Controller() string {
+	return "{{.author}}"
+}

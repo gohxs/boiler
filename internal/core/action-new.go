@@ -97,7 +97,7 @@ func actionNew(c *cli.Context) error {
 	data["curdir"], _ = os.Getwd() // Not good?
 
 	// Setup vars
-	err = ProcessDir(srcdir, name, data)
+	err = ProcessPath(srcdir, name, data)
 	if err != nil {
 		return err
 	}

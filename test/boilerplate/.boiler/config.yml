@@ -1,13 +1,17 @@
 vars:
   author: 
+    default: No author
     question: Ask something about author
   description: 
     default: Awesome app
     question: Ask something about description
 generators:
-  gofile:
-    target: "{{.curdir}}/{{.name}}"
-    source: gofile.go.boiler
-    ext: go # for files only
-    flags: ["package"]
-
+  go:
+    desc: Creates a go file based on template
+    files: 
+      - [gofile.go.boiler, "{{.curdir}}/{{.name}}"]
+    flags: ["package, p","proj"]
+  package:
+    desc: Creates a package for app
+    files:
+      - [controller, "{{.projroot}}/{{.name}}"]
