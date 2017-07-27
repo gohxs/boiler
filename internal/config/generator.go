@@ -1,24 +1,22 @@
 package config
 
-import "errors"
-
 // Generator configuration
 type Generator struct {
-	Files []FileTarget `yaml:"files"`
-	Flags []string     `yaml:"flags"`
-	Ext   string       `yaml:"ext"`
-	Desc  string       `yaml:"desc"`
-
+	Files       []FileTarget `yaml:"files"`
+	Flags       []string     `yaml:"flags"`
+	Ext         string       `yaml:"ext"`
+	Description string       `yaml:"description"`
+	Vars        []UserVar    `yaml:"vars"`
 	//Target string       `yaml:"target"`
 	//Source string       `yaml:"source"`
 }
 
 type FileTarget struct {
-	Source string
-	Target string
+	Source string `yaml:"source"`
+	Target string `yaml:"target"`
 }
 
-func (f *FileTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+/*func (f *FileTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	s := []string{}
 	err := unmarshal(&s)
 	if err != nil {
@@ -32,4 +30,4 @@ func (f *FileTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	f.Target = s[1]
 
 	return nil
-}
+}*/

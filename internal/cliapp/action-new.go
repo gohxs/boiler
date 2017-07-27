@@ -1,41 +1,40 @@
-package core
+package cliapp
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 
-	"github.com/gohxs/boiler/internal/config"
-
+	"github.com/gohxs/boiler/internal/core"
 	"github.com/urfave/cli"
 	git "gopkg.in/src-d/go-git.v4"
 	yaml "gopkg.in/yaml.v2"
 )
 
 func commandNew() cli.Command {
-	return cli.Command{
+	// Transform flags
+	ret := cli.Command{
 		Name:      "new",
 		ArgsUsage: "[repository/source] [projname]",
-		Usage:     "Initialize the boilerplate",
+		Usage:     "Create new Project from a boilerplate",
 		Action:    actionNew,
 	}
+	return ret
 }
 
-func actionNew(c *cli.Context) error {
+func actionNew(cl *cli.Context) error {
 
-	if c.NArg() < 2 {
-		return cli.ShowCommandHelp(c, "init")
+	if cl.NArg() < 2 {
+		return cli.ShowCommandHelp(cl, cl.Command.Name)
 	}
-	stdin, ok := c.App.Metadata["stdin"].(io.Reader)
+	/*stdin, ok := cl.App.Metadata["stdin"].(io.Reader)
 	if !ok {
 		stdin = os.Stdin
-	}
-	source := c.Args().Get(0)
-	name := c.Args().Get(1)
+	}*/
+	source := cl.Args().Get(0)
+	name := cl.Args().Get(1)
 
 	srcdir := source
 	u, err := url.Parse(source)
@@ -58,46 +57,49 @@ func actionNew(c *cli.Context) error {
 		}
 	}
 
-	// Template data
+	_, err = os.Stat(srcdir) // Check if source exists
+	if err != nil {
+		return err
 
-	//////////////////////
-	// Method for this
-	//////
-	cfg, err := config.FromFile(filepath.Join(srcdir, ".boiler", "config.yml"))
-	if err != nil && !os.IsNotExist(err) {
+	}
+
+	c := core.New(srcdir)
+
+	// Template data
+	err = c.Init()
+	if err != nil {
 		return err
 	}
 	udata := map[string]interface{}{} // UserVars
-	if cfg != nil {
-		// Data questions
-		in := bufio.NewReader(stdin)
-		for _, v := range cfg.UserVars {
-			// User interaction
-			fmt.Printf("[%s] %s (%s)? ", v.Name, v.Question, v.Default)
-			d, _, _ := in.ReadLine()
-			str := string(d)
-			if str == "" {
-				udata[v.Name] = v.Default
-			} else {
-				udata[v.Name] = str
-			}
-		}
-	}
+	// User defined param
 	udata["projname"] = name
 	// Store data in boiler folder
+	flagSet := []cli.Flag{}
+	// Build flagSet for generated help:
+	// Attempt
+	for _, f := range c.Config.UserVars { // Vars
+		if f.Flag != "" {
+			fl := cli.StringFlag{
+				Name:  f.Flag,
+				Usage: f.Question,
+			}
+			flagSet = append(flagSet, fl)
+		}
+	}
+	cl.Command.Flags = flagSet
 
-	// Place this somewhere that loads defaults
-	data := map[string]interface{}{} // Merge user data with data
+	flagOrAsk(cl, c.Config.UserVars, udata)
+	// Merge map
 	for k, v := range udata {
-		data[k] = v
+		c.Data[k] = v
 	}
 
 	// Setup global template vars
-	data["projroot"], _ = filepath.Abs(name)
-	data["curdir"], _ = os.Getwd() // Not good?
+	//c.Data["projroot"], _ = filepath.Abs(name) // New proj root
+	//c.Data["curdir"], _ = os.Getwd()           // Not good?
 
 	// Setup vars
-	err = ProcessPath(srcdir, name, data)
+	err = core.ProcessPath(srcdir, name, c.Data)
 	if err != nil {
 		return err
 	}

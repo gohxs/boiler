@@ -2,3 +2,10 @@ Project {{.projname}}
 ===================
 
 Author {{.author}}
+
+Vars
+=================
+{{range $k, $v := .}}{{$k}} = {{$v}} 
+{{end}}
+
+

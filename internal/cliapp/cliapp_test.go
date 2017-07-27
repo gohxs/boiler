@@ -1,4 +1,4 @@
-package core_test
+package cliapp_test
 
 import (
 	"bytes"

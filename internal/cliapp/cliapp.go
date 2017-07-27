@@ -1,9 +1,14 @@
-package core
+package cliapp
 
 import (
 	"io"
 
+	"github.com/gohxs/boiler/internal/core"
 	"github.com/urfave/cli"
+)
+
+var (
+	gCore, _ = core.FromCurDir()
 )
 
 // NewApp return cli app

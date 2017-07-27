@@ -1,17 +1,22 @@
 vars:
-  author: 
-    default: No author
-    question: Ask something about author
-  description: 
-    default: Awesome app
-    question: Ask something about description
+  - {name: author , default: No author, question: Ask something about author}
+  - {name: description, default: Awesome app, question: Ask something about description}
+
 generators:
   go:
-    desc: Creates a go file based on template
+    description: Creates a go file based on template
     files: 
-      - [gofile.go.boiler, "{{.curdir}}/{{.name}}"]
+      - {source: gofile.go.boiler, target: "{{.curdir}}/{{.name}}"}
     flags: ["package, p","proj"]
+    vars:
+      - {
+          name: package,
+          default: "{{.package}}",
+          flag: "package, p",
+          description: Package to place on package thing
+        }
   package:
-    desc: Creates a package for app
+    description: Creates a package for app
     files:
-      - [controller, "{{.projroot}}/{{.name}}"]
+      - {source: controller/pkg.go.boiler, target: "{{.projroot}}/{{.name}}/{{.name}}"}
+      - {source: controller/pkg_test.go.boiler, target: "{{.projroot}}/{{.name}}/{{.name}}_test"}
