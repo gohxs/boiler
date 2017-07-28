@@ -63,7 +63,7 @@ boiler-example
 └── staticfile.txt
 ```
 <a name="config-file"></a>
-####File: .boiler/config.yml
+#### File: .boiler/config.yml
 ```yaml
 description: |  ## Descriptive text to show when creating a project from this boileplate
   ______       ___________            
@@ -126,7 +126,7 @@ config.yml root object
 ---------------------
 <a name="usage"></a>
 <a name="cmd-create"></a>
-####create command
+#### create command
 ```
 Create new project from a boilerplate
 
@@ -213,8 +213,9 @@ projName = proj
 ```
 
 --------------
+
 <a name="cmd-add"></a>
-####add command
+#### add command
 ```
 Add a file based on boilerplate generator
 
@@ -267,7 +268,7 @@ and fetches a generator with that name/alias
 
 
 
-###TODO:
+### TODO:
 - [X] Improve package naming of core
 - [-] Maybe merge config package into (core) package? 
 - [ ] Create `init` command which initializes a boiler folder in current work dir
