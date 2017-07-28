@@ -18,6 +18,10 @@ func ProcessFile(source, dest string, data map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
+	_, err = os.Stat(dest)
+	if !os.IsNotExist(err) {
+		return os.ErrExist
+	}
 
 	fdst, err := os.Create(dest)
 	if err != nil {
@@ -38,6 +42,7 @@ func ProcessFile(source, dest string, data map[string]interface{}) error {
 
 }
 
+// ProcessPath (either file or dir)
 func ProcessPath(srcPath, dstPath string, data map[string]interface{}) error {
 	sourceinfo, err := os.Stat(srcPath)
 	if err != nil {
@@ -98,6 +103,11 @@ func CopyFile(source, dest string) error {
 		return err
 	}
 	defer fsrc.Close()
+
+	_, err = os.Stat(dest)
+	if !os.IsNotExist(err) {
+		return os.ErrExist
+	}
 
 	fdst, err := os.Create(dest)
 	if err != nil {

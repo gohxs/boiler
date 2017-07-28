@@ -1,4 +1,4 @@
-package {{.package}}_test
+package {{.name}}_test
 
 import (
 	"testing"

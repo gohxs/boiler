@@ -24,8 +24,12 @@ generators: # Should have aliases
           question: package name of the new file,
           description: Package to place on package thing
         }
+  puretxt:
+    description: Clones pure.txt file
+    files:
+      - {source: pure.txt, target: "{{.curdir}}/{{.name}}" }
   package:
     description: Creates a package for app
     files:
-      - {source: controller/pkg.go.boiler, target: "{{.projroot}}/{{.name}}/{{.name}}"}
-      - {source: controller/pkg_test.go.boiler, target: "{{.projroot}}/{{.name}}/{{.name}}_test"}
+      - {source: controller/pkg.go.boiler, target: "{{.projRoot}}/{{.name}}/{{.name}}"}
+      - {source: controller/pkg_test.go.boiler, target: "{{.projRoot}}/{{.name}}/{{.name}}_test"}

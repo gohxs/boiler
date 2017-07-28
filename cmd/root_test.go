@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/gohxs/boiler/cmd"
-	"github.com/gohxs/boiler/internal/cliapp"
 )
 
 func init() {
@@ -27,6 +26,7 @@ func TestInit(t *testing.T) {
 	tu := testUtil{t}
 
 	buf := bytes.NewBuffer([]byte("Testing\ntest")) // First "Testing" second "test"
+
 	cmd.Stdin = buf
 	os.Args = []string{"", "create", "boilerplate", proj}
 	err := cmd.RootCmd.Execute()
@@ -47,8 +47,8 @@ func TestInit2(t *testing.T) {
 	defer os.RemoveAll(proj)
 	tu := testUtil{t}
 
-	app := cliapp.NewApp(os.Stdin)
-	err := app.Run([]string{"", "new", "boilerplate2", proj})
+	os.Args = []string{"", "create", "boilerplate2", proj}
+	err := cmd.RootCmd.Execute()
 	tu.eq(err, nil)
 
 	_, err = os.Stat(path.Join(proj, "file.go"))

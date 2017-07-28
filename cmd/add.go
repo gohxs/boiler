@@ -2,25 +2,22 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gohxs/boiler/internal/core"
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	RootCmd.AddCommand(Add())
-}
-
 // Add Package command
-func Add() *cobra.Command {
+func init() {
 
 	// Build flags here too i guess
-	ret := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "add [file]",
-		Short: "Add a file based on template",
-		Long:  "using file as an argument requires a generator containing extension based aliases",
+		Short: "Add a file based on boilerplate generator",
 		Run: func(cmd *cobra.Command, args []string) {
 			// Not enough args
 			if len(args) < 1 {
@@ -46,23 +43,29 @@ func Add() *cobra.Command {
 				return
 			}
 
-			gen := core.Cur.GetGenerator(genName)
+			gen := core.GetGenerator(genName)
 			if gen == nil {
-				cmd.Printf("Generator %s does not exists\n", genName)
+				cmd.Printf("Generator %s does not exists\n\n", genName)
 				cmd.Help()
 				return
 			}
 
-			flagOrAsk(cmd, gen.Vars, core.Cur.Data)
-			core.Cur.Generate(genName, name)
+			flagOrAsk(cmd, gen.Vars, core.Data())
+			err := core.Generate(genName, name)
+			if err != nil {
+				cmd.Println(err)
+			}
 		},
 	}
+	RootCmd.AddCommand(cmd)
+
+	// Flag for listing
 
 	// Build sub commands from gen:
-	for k, v := range core.Cur.Config.Generators {
+	for k, v := range core.Config().Generators {
 		gen := v
 		genName := k
-		cmd := cobra.Command{
+		subCmd := cobra.Command{
 			Use:     fmt.Sprintf("%s [name]", genName),
 			Long:    v.Description,
 			Aliases: v.Aliases,
@@ -71,22 +74,28 @@ func Add() *cobra.Command {
 					cmd.Help()
 					return
 				}
-				flagOrAsk(cmd, gen.Vars, core.Cur.Data)
-				core.Cur.Generate(genName, args[0])
+				core.Data()["curdir"], _ = os.Getwd()     //currentDir (useful for file paths in config)?
+				core.Data()["time"] = time.Now().UTC()    //curTime
+				core.Data()["projRoot"] = core.ProjRoot() //projectRoot (usefull for file paths in config)
+
+				flagOrAsk(cmd, gen.Vars, core.Data())
+				err := core.Generate(genName, args[0])
+				if err != nil {
+					cmd.Println(err)
+				}
 			},
 		}
 		for _, f := range gen.Vars {
-			flagDefault, _ := core.ProcessString(f.Default, core.Cur.Data)
+			flagDefault, _ := core.ProcessString(f.Default, core.Data())
 			flParts := strings.Split(f.Flag, ",")
 			if len(flParts) > 1 {
-				cmd.Flags().StringP(strings.TrimSpace(flParts[0]), strings.TrimSpace(flParts[1]), flagDefault, f.Question)
+				subCmd.Flags().StringP(strings.TrimSpace(flParts[0]), strings.TrimSpace(flParts[1]), flagDefault, f.Question)
 			} else {
-				cmd.Flags().String(f.Flag, flagDefault, f.Question)
+				subCmd.Flags().String(f.Flag, flagDefault, f.Question)
 			}
 		}
 		//flagFromVars(cmd.Flags(), gen.Vars)
-		ret.AddCommand(&cmd)
+		cmd.AddCommand(&subCmd)
 	}
 
-	return ret
 }

@@ -63,4 +63,16 @@ generators:
 ```
 * Improve Process function to process a file and then a dir(invert) - DONE
 
+* Better logic to NewProj/Create
+
+First step Create a Core based on Repo/Original
+```go
+	c := core.From("Path")
+	// Vars Vars Vars
+	c.CloneTo("path2")
+```
+
+
+
+
 

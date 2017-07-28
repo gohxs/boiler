@@ -1,10 +1,5 @@
 package config
 
-import (
-	"reflect"
-	"strings"
-)
-
 // Vars
 //type Vars []UserVar
 
@@ -17,7 +12,7 @@ type UserVar struct {
 }
 
 // UnmarshalYAML implementation for yaml decoder, for ordered key
-func (vr *UserVar) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+/*func (vr *UserVar) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	//try string
 	var tryStr string
 	err = unmarshal(&tryStr)
@@ -50,4 +45,4 @@ func (vr *UserVar) UnmarshalYAML(unmarshal func(interface{}) error) (err error) 
 
 	// somehow  copy map to struct
 	return nil
-}
+}*/
