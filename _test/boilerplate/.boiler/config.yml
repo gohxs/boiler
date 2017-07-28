@@ -1,18 +1,27 @@
+description: |
+  ______       ___________            
+  ___  /__________(_)__  /____________
+  __  __ \  __ \_  /__  /_  _ \_  ___/
+  _  /_/ / /_/ /  / _  / /  __/  /    
+  /_.___/\____//_/  /_/  \___//_/.
+  Test boilerplate for boiler cli app
+
 vars:
   - {name: author , default: No author, question: Ask something about author}
   - {name: description, default: Awesome app, question: Ask something about description}
 
-generators:
-  go:
+generators: # Should have aliases
+  gofile:
+    aliases: [.go]
     description: Creates a go file based on template
     files: 
       - {source: gofile.go.boiler, target: "{{.curdir}}/{{.name}}"}
-    flags: ["package, p","proj"]
     vars:
       - {
           name: package,
-          default: "{{.package}}",
+          default: "{{.projName}}",
           flag: "package, p",
+          question: package name of the new file,
           description: Package to place on package thing
         }
   package:

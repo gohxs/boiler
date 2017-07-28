@@ -1,0 +1,14 @@
+// Copyright {{.time.Format "2006"}} {{.author}}. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Create something
+
+package {{.package}}
+
+import "fmt"
+
+// {{.package}} Is a function that:
+func {{.package}}() {
+	fmt.Println("App")
+}

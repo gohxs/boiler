@@ -1,23 +1,22 @@
-package cliapp
+package cmd
 
 import (
 	"bufio"
 	"fmt"
-	"io"
 
 	"github.com/gohxs/boiler/internal/config"
 	"github.com/gohxs/boiler/internal/core"
-	"github.com/urfave/cli"
+	"github.com/spf13/cobra"
 )
 
-func flagOrAsk(cl *cli.Context, userVars []config.UserVar, data map[string]interface{}) (err error) {
+func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]interface{}) (err error) {
+	in := bufio.NewReader(Stdin)
 
-	stdin := cl.App.Metadata["stdin"].(io.Reader)
-	in := bufio.NewReader(stdin)
 	for _, v := range userVars {
-		if cl.IsSet(v.Name) { // We have a flag, continue
-			data[v.Name] = cl.String(v.Name)
-			continue
+		fl := cmd.Flag(v.Name)
+		if fl != nil && fl.Changed {
+			data[v.Name] = fl.Value.String()
+			return
 		}
 		question, err := core.ProcessString(v.Question, data)
 		if err != nil {
@@ -27,19 +26,13 @@ func flagOrAsk(cl *cli.Context, userVars []config.UserVar, data map[string]inter
 		if err != nil {
 			return err
 		}
-		if question == "" {
-			question = "Type value for:"
-		}
 		fmt.Printf("%s [%s] (%s)? ", question, v.Name, value)
-
 		line, _, _ := in.ReadLine()
 		if len(line) != 0 {
 			value = string(line)
 		}
-
 		if value != "" {
 			data[v.Name] = value
-
 		}
 	}
 

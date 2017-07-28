@@ -1,4 +1,4 @@
-package cliapp_test
+package cmd_test
 
 import (
 	"bytes"
@@ -7,11 +7,12 @@ import (
 	"path"
 	"testing"
 
+	"github.com/gohxs/boiler/cmd"
 	"github.com/gohxs/boiler/internal/cliapp"
 )
 
 func init() {
-	os.Chdir("../../_test")
+	os.Chdir("../_test")
 }
 
 // Helper function to ignore multi arg error
@@ -24,9 +25,11 @@ func TestInit(t *testing.T) {
 	defer os.RemoveAll(proj)
 
 	tu := testUtil{t}
+
 	buf := bytes.NewBuffer([]byte("Testing\ntest")) // First "Testing" second "test"
-	app := cliapp.NewApp(buf)
-	err := app.Run([]string{"", "new", "boilerplate", proj})
+	cmd.Stdin = buf
+	os.Args = []string{"", "create", "boilerplate", proj}
+	err := cmd.RootCmd.Execute()
 	tu.eq(err, nil)
 
 	cmd := exec.Command("go", "run", path.Join(proj, "hello.go"))

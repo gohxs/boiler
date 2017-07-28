@@ -4,19 +4,14 @@ package main
 //go:generate genversion -package main -out version.go
 
 import (
-	"fmt"
-	"log"
 	"os"
 
-	"github.com/gohxs/boiler/internal/cliapp"
+	"github.com/gohxs/boiler/cmd"
 )
 
 func main() {
-	log.SetFlags(log.Lshortfile | log.Ltime)
-	app := cliapp.NewApp(os.Stdin)
-	//app.Version = Version
-	err := app.Run(os.Args)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	if err := cmd.RootCmd.Execute(); err != nil {
+		cmd.RootCmd.Println(err)
+		os.Exit(1)
 	}
 }

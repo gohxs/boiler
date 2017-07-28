@@ -1,0 +1,12 @@
+Project {{.projName}}
+===================
+{{.projDate.Format "02-01-2006"}}
+
+Author: {{.author}}
+
+Project variables
+=================
+{{range $k, $v := .}}{{$k}} = {{$v}} 
+{{end}}
+
+

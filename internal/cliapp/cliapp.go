@@ -30,6 +30,7 @@ func NewApp(stdin io.Reader) *cli.App {
 	app.Commands = []cli.Command{
 		commandNew(),
 		commandCreate(),
+		commandCreatebak(),
 	}
 
 	return app

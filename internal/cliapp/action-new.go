@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/gohxs/boiler/internal/core"
 	"github.com/urfave/cli"
@@ -29,10 +30,6 @@ func actionNew(cl *cli.Context) error {
 	if cl.NArg() < 2 {
 		return cli.ShowCommandHelp(cl, cl.Command.Name)
 	}
-	/*stdin, ok := cl.App.Metadata["stdin"].(io.Reader)
-	if !ok {
-		stdin = os.Stdin
-	}*/
 	source := cl.Args().Get(0)
 	name := cl.Args().Get(1)
 
@@ -64,47 +61,36 @@ func actionNew(cl *cli.Context) error {
 	}
 
 	c := core.New(srcdir)
-
 	// Template data
 	err = c.Init()
 	if err != nil {
 		return err
 	}
+	fmt.Println(c.Config.Description)
+	fmt.Println("-----")
+
 	udata := map[string]interface{}{} // UserVars
 	// User defined param
-	udata["projname"] = name
+	// Creation time params
+	udata["projName"] = name
+	udata["projDate"] = time.Now().UTC()
 	// Store data in boiler folder
-	flagSet := []cli.Flag{}
-	// Build flagSet for generated help:
 	// Attempt
-	for _, f := range c.Config.UserVars { // Vars
-		if f.Flag != "" {
-			fl := cli.StringFlag{
-				Name:  f.Flag,
-				Usage: f.Question,
-			}
-			flagSet = append(flagSet, fl)
-		}
-	}
-	cl.Command.Flags = flagSet
-
 	flagOrAsk(cl, c.Config.UserVars, udata)
+
 	// Merge map
 	for k, v := range udata {
 		c.Data[k] = v
 	}
 
-	// Setup global template vars
-	//c.Data["projroot"], _ = filepath.Abs(name) // New proj root
-	//c.Data["curdir"], _ = os.Getwd()           // Not good?
-
+	fmt.Print("Generating project...\n\n")
 	// Setup vars
 	err = core.ProcessPath(srcdir, name, c.Data)
 	if err != nil {
 		return err
 	}
 	fmt.Println("Created project:", name)
-	ydata, err := yaml.Marshal(udata)
+	ydata, err := yaml.Marshal(c.Data)
 	if err != nil {
 		return err
 	}
