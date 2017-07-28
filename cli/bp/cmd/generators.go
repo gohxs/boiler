@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/gohxs/boiler/internal/core"
+	"github.com/gohxs/boiler"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +15,7 @@ func init() {
 		Use:   "generators",
 		Short: "List generators of the current boilerplate",
 		Run: func(cmd *cobra.Command, args []string) {
-			for k := range core.Config().Generators {
+			for k := range boiler.Config().Generators {
 				fmt.Println(k)
 			}
 		},

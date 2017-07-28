@@ -1,4 +1,4 @@
-description: |
+description: |  # Descriptive text to show when creating a project from this boilerplate
   ______       ___________            
   ___  /__________(_)__  /____________
   __  __ \  __ \_  /__  /_  _ \_  ___/
@@ -6,26 +6,26 @@ description: |
   /_.___/\____//_/  /_/  \___//_/.
   Test boilerplate for boiler cli app
 
-vars:
+vars: # Variables to be used in boiler files templates
   - {name: author , default: No author, question: Ask something about author}
   - {name: description, default: Awesome app, question: Ask something about description}
 
-generators: # Should have aliases
+generators: # Generator after the boilerplate project is created, these are used to create units
   gofile:
     aliases: [.go]
     description: Creates a go file based on template
     files: 
       - {source: gofile.go.boiler, target: "{{.curdir}}/{{.name}}"}
     vars:
-      - {
-          name: package,
-          default: "{{.projName}}",
-          flag: "package, p",
-          question: package name of the new file,
-          description: Package to place on package thing
-        }
+      - name: package
+        default: "{{.projName}}"
+        flag: "package, p"
+        question: package name of the new file
+        description: Package to place on package thing
+        
   puretxt:
     description: Clones pure.txt file
+    aliases: [.txt]
     files:
       - {source: pure.txt, target: "{{.curdir}}/{{.name}}" }
   package:

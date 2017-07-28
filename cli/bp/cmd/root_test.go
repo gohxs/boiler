@@ -7,7 +7,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/gohxs/boiler/cmd"
+	"github.com/gohxs/boiler/cli/bp/cmd"
 )
 
 func init() {

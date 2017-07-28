@@ -11,7 +11,7 @@ const (
 	bash_completion_func = `
 __boiler_get_generator()
 {
-    if boiler_output=$(boiler generators); then
+    if boiler_output=$(bp generators); then
         out=$(echo "${boiler_output}")
         COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
     fi
@@ -19,7 +19,7 @@ __boiler_get_generator()
 }
 __custom_func() {
     case ${last_command} in
-        boiler_add)
+        bp_add)
             __boiler_get_generator 
             return
             ;;

@@ -3,14 +3,15 @@ package cmd
 import (
 	"os"
 
-	"github.com/gohxs/boiler/internal/core"
+	"github.com/gohxs/boiler"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "create [repository/source] [projname]",
-		Short: "Create new project from a boilerplate",
+		Use:     "create [repository/source] [projname]",
+		Aliases: []string{"c"},
+		Short:   "Create new project from a boilerplate",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 2 {
 				cmd.Help()
@@ -27,11 +28,12 @@ func init() {
 			}
 
 			cmd.Printf("Loading boilerplate from %s\n", source)
-			c, err := core.From(source)
+			c, err := boiler.From(source)
 			if err != nil {
 				cmd.Println(err)
 				return
 			}
+			defer c.Close()
 
 			cmd.Println(c.Config().Description)
 			cmd.Println("-----")

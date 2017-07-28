@@ -1,0 +1,1 @@
+This file will remain unprocessed even if tags like {{.author}} are present

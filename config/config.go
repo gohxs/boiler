@@ -15,8 +15,6 @@ type Config struct {
 
 // FromFile load config from file
 func FromFile(configPath string, config *Config) error {
-	//log.Println("Reading config file:", configPath)
-	// Check for file or ignore
 	configData, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return err

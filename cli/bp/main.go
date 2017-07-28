@@ -6,7 +6,7 @@ package main
 import (
 	"os"
 
-	"github.com/gohxs/boiler/cmd"
+	"github.com/gohxs/boiler/cli/bp/cmd"
 )
 
 func main() {

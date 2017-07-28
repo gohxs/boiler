@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
-	"github.com/gohxs/boiler/internal/core"
+	"github.com/gohxs/boiler"
 	"github.com/spf13/cobra"
 )
 
@@ -16,8 +14,9 @@ func init() {
 
 	// Build flags here too i guess
 	cmd := &cobra.Command{
-		Use:   "add [file]",
-		Short: "Add a file based on boilerplate generator",
+		Use:     "add [file]",
+		Aliases: []string{"a"},
+		Short:   "Add a file based on boilerplate generator",
 		Run: func(cmd *cobra.Command, args []string) {
 			// Not enough args
 			if len(args) < 1 {
@@ -43,15 +42,15 @@ func init() {
 				return
 			}
 
-			gen := core.GetGenerator(genName)
+			gen := boiler.GetGenerator(genName)
 			if gen == nil {
 				cmd.Printf("Generator %s does not exists\n\n", genName)
 				cmd.Help()
 				return
 			}
 
-			flagOrAsk(cmd, gen.Vars, core.Data())
-			err := core.Generate(genName, name)
+			flagOrAsk(cmd, gen.Vars, boiler.Data())
+			err := boiler.Generate(genName, name)
 			if err != nil {
 				cmd.Println(err)
 			}
@@ -62,7 +61,7 @@ func init() {
 	// Flag for listing
 
 	// Build sub commands from gen:
-	for k, v := range core.Config().Generators {
+	for k, v := range boiler.Config().Generators {
 		gen := v
 		genName := k
 		subCmd := cobra.Command{
@@ -74,19 +73,16 @@ func init() {
 					cmd.Help()
 					return
 				}
-				core.Data()["curdir"], _ = os.Getwd()     //currentDir (useful for file paths in config)?
-				core.Data()["time"] = time.Now().UTC()    //curTime
-				core.Data()["projRoot"] = core.ProjRoot() //projectRoot (usefull for file paths in config)
 
-				flagOrAsk(cmd, gen.Vars, core.Data())
-				err := core.Generate(genName, args[0])
+				flagOrAsk(cmd, gen.Vars, boiler.Data())
+				err := boiler.Generate(genName, args[0])
 				if err != nil {
 					cmd.Println(err)
 				}
 			},
 		}
 		for _, f := range gen.Vars {
-			flagDefault, _ := core.ProcessString(f.Default, core.Data())
+			flagDefault, _ := boiler.ProcessString(f.Default, boiler.Data())
 			flParts := strings.Split(f.Flag, ",")
 			if len(flParts) > 1 {
 				subCmd.Flags().StringP(strings.TrimSpace(flParts[0]), strings.TrimSpace(flParts[1]), flagDefault, f.Question)

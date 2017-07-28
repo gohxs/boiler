@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 
-	"github.com/gohxs/boiler/internal/config"
-	"github.com/gohxs/boiler/internal/core"
+	"github.com/gohxs/boiler"
+	"github.com/gohxs/boiler/config"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +18,11 @@ func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]in
 			data[v.Name] = fl.Value.String()
 			return
 		}
-		question, err := core.ProcessString(v.Question, data)
+		question, err := boiler.ProcessString(v.Question, data)
 		if err != nil {
 			return err
 		}
-		value, err := core.ProcessString(v.Default, data)
+		value, err := boiler.ProcessString(v.Default, data)
 		if err != nil {
 			return err
 		}

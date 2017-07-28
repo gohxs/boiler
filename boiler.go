@@ -1,19 +1,20 @@
-package core
+//go:generate go get dev.hexasoftware.com/hxs/genversion
+//go:generate genversion -package boiler -out version.go
+package boiler
 
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/gohxs/boiler/config"
+
 	git "gopkg.in/src-d/go-git.v4"
 	yaml "gopkg.in/yaml.v2"
-
-	"github.com/gohxs/boiler/internal/config"
 )
 
 const (
@@ -21,11 +22,15 @@ const (
 	BoilerExt = ".boiler"
 	// BoilerDir directory name inside the boiler project
 	BoilerDir = ".boiler"
+
+	VARPROJNAME = "projName"
+	VARPROJROOT = "projRoot"
+	VARPROJDATE = "projDate"
 )
 
 var (
 	// Global from currentDir if exists
-	global, _ = FromCurDir()
+	global, _ = From(".")
 
 	// Accessors to the global proj (curdir project)
 
@@ -37,11 +42,7 @@ var (
 	Name         = global.Name
 )
 
-func init() {
-	//global.DefaultVars() // Make it create default vars
-}
-
-// This is a projConfig/Proj
+// Core This is a projConfig/Proj
 type Core struct {
 	name        string
 	config      config.Config
@@ -49,6 +50,7 @@ type Core struct {
 	projRoot    string
 	configFile  string
 	userVarFile string
+	isTemporary bool // If temporary such as git temporary sources, remove
 }
 
 // New instantiate a dumb core
@@ -68,23 +70,17 @@ func (c *Core) Init() (err error) {
 		return err
 		//return err
 	}
-
 	// Load vars from user.yml if exists
 	userFile, err := ioutil.ReadFile(c.userVarFile)
 	if err == nil { // NO ERROR intentional, we only unmarshal if file exists else its ok to go on
 		yaml.Unmarshal(userFile, c.data) // Add to data
 	}
+
+	if projName, ok := c.data[VARPROJNAME]; ok {
+		c.name = projName.(string)
+	}
 	return nil
 }
-
-// DefaultVars Set vars
-/*func (c *Core) DefaultVars() {
-	c.data["curdir"], _ = os.Getwd()  //?
-	c.data["time"] = time.Now().UTC() // curTime
-
-	c.data["projRoot"] = c.projRoot //?
-	// Date tools
-}*/
 
 // CloneTo and process the boiler plate to destination
 func (c *Core) CloneTo(dest string) (err error) {
@@ -98,8 +94,8 @@ func (c *Core) CloneTo(dest string) (err error) {
 	}
 	c.name = name
 
-	c.data["projName"] = name
-	c.data["projDate"] = time.Now().UTC()
+	c.data[VARPROJNAME] = name
+	c.data[VARPROJDATE] = time.Now().UTC()
 	//fmt.Print("Generating project...\n\n")
 
 	// Setup vars
@@ -145,7 +141,10 @@ func (c *Core) GetGenerator(name string) *config.Generator {
 func (c *Core) Generate(generator string, name string) (err error) {
 
 	// DefaultVars here?
-	c.data["name"] = name
+	c.data["name"] = name // Name or target
+	c.data[VARPROJROOT] = c.ProjRoot()
+	c.data["time"] = time.Now().UTC() //curTime
+	c.data["curdir"], _ = os.Getwd()  //currentDir (useful for file paths in config)?
 
 	gen := c.GetGenerator(generator)
 	// Each file
@@ -176,6 +175,12 @@ func (c *Core) Generate(generator string, name string) (err error) {
 	}
 	return nil
 
+}
+func (c *Core) Close() {
+	if c.isTemporary {
+		defer os.RemoveAll(c.projRoot)
+
+	}
 }
 
 //////////////////////
@@ -208,58 +213,53 @@ func (c *Core) Name() string {
 
 // From Should be multi purpose
 func From(source string) (*Core, error) {
-	srcdir := source
-
-	u, err := url.Parse(source)
+	var (
+		srcdir string
+		err    error
+	)
+	if source == "" { // Special case if empty load from current dir?
+		srcdir = "." //, _ = os.Getwd()
+	} else {
+		srcdir = source
+		u, err := url.Parse(source)
+		if err != nil {
+			return nil, err
+		}
+		// Git to tmpdir // Maybe move this to cmd
+		if u.Scheme == "http" || u.Scheme == "https" || u.Scheme == "git" {
+			srcdir, err = ioutil.TempDir(os.TempDir(), "boiler")
+			if err != nil {
+				return nil, err
+			}
+			_, err = git.PlainClone(srcdir, false, &git.CloneOptions{
+				URL:      source,
+				Progress: os.Stdout,
+			})
+			if err != nil {
+				return nil, err
+			}
+			c := New(srcdir)
+			c.isTemporary = true
+			err = c.Init()
+			if err != nil {
+				c.Close() // Close if init error
+				return nil, err
+			}
+			return c, nil
+		}
+	}
+	// Solve dir into .boiler root
+	srcdir, err = solveProjRoot(srcdir)
 	if err != nil {
 		return nil, err
 	}
-	// Git to tmpdir
-	if u.Scheme == "http" || u.Scheme == "https" || u.Scheme == "git" {
-		srcdir, err = ioutil.TempDir(os.TempDir(), "boiler")
-		if err != nil {
-			return nil, err
-		}
-		defer os.RemoveAll(srcdir)
-		_, err = git.PlainClone(srcdir, false, &git.CloneOptions{
-			URL:      source,
-			Progress: os.Stdout,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	_, err = os.Stat(srcdir) // Check if source exists
+	// check if exists
+	_, err = os.Stat(srcdir)
 	if err != nil {
 		return nil, err
 	}
 	// TempCore
 	c := New(srcdir)
-
 	err = c.Init()
 	return c, err
-}
-
-// FromCurDir returns a boiler from current path
-func FromCurDir() (*Core, error) {
-	cwd, _ := os.Getwd()
-	return SearchPath(cwd)
-}
-
-// SearchPath Find project in parent folders
-func SearchPath(path string) (*Core, error) {
-	projRoot := solveProjRoot(path)
-	if projRoot == "" {
-		projRoot = path
-	}
-	c := New(projRoot)
-	err := c.Init()
-	if err != nil {
-		log.Println("Err:", err)
-		return c, err
-	}
-
-	return c, nil
-
 }
