@@ -10,9 +10,10 @@ Follow this [walkthrough](/WALKTHROUGH.md) to create a simple boilerplate
 Content
 --------------
 * [Install](#install)
+* [Basic usage](#basic-usage)
 * [bash completion](#bash-completion)
 * [boilerplate structure](#boilerplate-structure)
-	* [.boiler/config.yml](#config-file)
+	* [Example config file](#config-file)
 * [Usage](#usage)
   * [create command](cmd-create)
   * [add command](cmd-add)
@@ -25,6 +26,7 @@ Install:
 go get github.com/gohxs/boiler/cli/bp
 ```
 
+<a name="basic-usage"></a>
 Basic usage:
 ---------------
 ```
@@ -33,6 +35,8 @@ bp create boilerplate/path proj1
 
 ```
 bp create http://github.com/gohxs/boiler-example-boilerplate proj1
+cd proj1
+bp add gofile example.go
 ```
 
 <a name="bash-completion"></a>
