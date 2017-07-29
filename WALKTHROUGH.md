@@ -70,7 +70,7 @@ $ . proj1/hello.sh
 Hello me I'm beepboop
 ```
 
-###Adding a generator:
+### Adding a generator:
 in config.yml we add the generator field with the list of generators,
 Generators can be added/edited in on going projects by changing proper .boiler/config.yml in each project
 We can even create .boiler/config.yml in existing projects with required generators/templates
