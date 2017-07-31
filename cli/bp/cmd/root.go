@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	bash_completion_func = `
+	bashCompleteFunc = `
 __boiler_get_generator()
 {
     if boiler_output=$(bp generators list); then
@@ -33,7 +33,7 @@ __custom_func() {
 
 var (
 	// RootCmd of application
-	RootCmd = &cobra.Command{Use: os.Args[0], BashCompletionFunction: bash_completion_func}
+	RootCmd = &cobra.Command{Use: os.Args[0], BashCompletionFunction: bashCompleteFunc}
 	// Stdin for cli app
 	Stdin   io.Reader = os.Stdin
 	gboiler *boiler.Core

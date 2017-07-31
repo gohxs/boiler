@@ -20,11 +20,7 @@ func FromFile(configPath string, config *Config) error {
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(configData, config)
-	if err != nil {
-		return err
-	}
-	return nil
+	return yaml.Unmarshal(configData, config)
 
 }
 
@@ -36,9 +32,5 @@ func SaveFile(configPath string, config *Config) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(configPath, bdata, os.FileMode(0644))
-	if err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(configPath, bdata, os.FileMode(0644))
 }

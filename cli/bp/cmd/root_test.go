@@ -15,9 +15,9 @@ func init() {
 }
 
 // Helper function to ignore multi arg error
-func aerr(args ...interface{}) interface{} {
+/*func aerr(args ...interface{}) interface{} {
 	return args[0]
-}
+}*/
 
 func TestInit(t *testing.T) {
 	proj := "test-proj1"

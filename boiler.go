@@ -24,14 +24,12 @@ const (
 	BoilerExt = ".boiler"
 	// BoilerDir directory name inside the boiler project
 	BoilerDir = ".boiler"
-
+	//VARPROJNAME project name data key
 	VARPROJNAME = "projName"
+	//VARPROJROOT project root data key
 	VARPROJROOT = "projRoot"
+	//VARPROJDATE project init date data key
 	VARPROJDATE = "projDate"
-)
-
-var (
-	ErrAlreadyExists = errors.New("Already Exists")
 )
 
 // Core This is a projConfig/Proj
@@ -70,7 +68,10 @@ func (c *Core) Init() (err error) {
 	// Load vars from user.yml if exists
 	userFile, err := ioutil.ReadFile(c.UserVarFile)
 	if err == nil { // NO ERROR intentional, we only unmarshal if file exists else its ok to go on
-		yaml.Unmarshal(userFile, c.Data) // Add to data
+		err = yaml.Unmarshal(userFile, c.Data) // Add to data
+		if err != nil {
+			return err
+		}
 	}
 
 	if projName, ok := c.Data[VARPROJNAME]; ok {
@@ -101,7 +102,7 @@ func (c *Core) CloneTo(dest string) (err error) {
 	name := filepath.Base(dest)
 	dir := filepath.Dir(dest)
 	if dir != "" {
-		err := os.MkdirAll(dir, os.FileMode(0755))
+		err = os.MkdirAll(dir, os.FileMode(0755))
 		if err != nil {
 			return err
 		}
@@ -140,7 +141,10 @@ func (c *Core) Save() (err error) {
 		return err
 	}
 	boilerPath := filepath.Join(c.ProjRoot, ".boiler")
-	os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error
+	err = os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error?
+	if err != nil {
+		return err
+	}
 
 	err = ioutil.WriteFile(filepath.Join(boilerPath, "user.yml"), ydata, os.FileMode(0644))
 	return err
@@ -154,7 +158,10 @@ func (c *Core) SaveData() (err error) {
 		return err
 	}
 	boilerPath := filepath.Join(c.ProjRoot, ".boiler")
-	os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error
+	err = os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error
+	if err != nil {
+		return err
+	}
 
 	err = ioutil.WriteFile(filepath.Join(boilerPath, "user.yml"), ydata, os.FileMode(0644))
 	return err
@@ -210,7 +217,11 @@ func (c *Core) Generate(generator string, name string) (err error) {
 
 		// Create dir
 		dir, _ := filepath.Split(targetFile)
-		os.MkdirAll(dir, os.FileMode(0755))
+		err = os.MkdirAll(dir, os.FileMode(0755))
+		if err != nil {
+			return err
+		}
+
 		err = ProcessPath(srcPath, targetFile, c.Data)
 		if err != nil {
 			return err
@@ -219,6 +230,7 @@ func (c *Core) Generate(generator string, name string) (err error) {
 	return nil
 }
 
+//GeneratorFetch fetches a generator from other repository
 func (c *Core) GeneratorFetch(srcBoiler *Core, genName, localName string) (err error) {
 	if _, ok := c.Config.Generators[localName]; ok {
 		return fmt.Errorf("Generator '%s' already exists", localName)
@@ -230,11 +242,11 @@ func (c *Core) GeneratorFetch(srcBoiler *Core, genName, localName string) (err e
 	}*/
 
 	if !srcBoiler.IsBoiler {
-		return fmt.Errorf("Source '%s' is not a boiler project", srcBoiler)
+		return fmt.Errorf("Source '%s' is not a boiler project", srcBoiler.ProjRoot)
 	}
 	gen := srcBoiler.GetGenerator(genName)
 	if gen == nil {
-		return fmt.Errorf("Generator '%s' does not exists in '%s'", genName, srcBoiler)
+		return fmt.Errorf("Generator '%s' does not exists in '%s'", genName, srcBoiler.ProjRoot)
 	}
 
 	newGen := config.Generator{}
@@ -265,7 +277,7 @@ func (c *Core) GeneratorFetch(srcBoiler *Core, genName, localName string) (err e
 		newGen.Files = append(newGen.Files, config.FileTarget{Source: filepath.Join(dirPrefix, f.Source), Target: f.Target})
 	}
 	if err != nil {
-		os.RemoveAll(dstPath) // Remove newly created dir because of error
+		_ = os.RemoveAll(dstPath) // Remove newly created dir because of error
 		return err
 	}
 	c.Config.Generators[localName] = newGen // entry created
@@ -295,7 +307,8 @@ func From(source string) (*Core, error) {
 		srcdir = "." //, _ = os.Getwd()
 	} else {
 		srcdir = source
-		u, err := url.Parse(source)
+		var u *url.URL
+		u, err = url.Parse(source)
 		if err != nil {
 			return nil, err
 		}

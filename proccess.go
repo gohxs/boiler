@@ -85,6 +85,7 @@ func ProcessPath(srcPath, dstPath string, data map[string]interface{}) error {
 	return nil
 }
 
+//ProcessString passes a string through template with data
 func ProcessString(source string, data map[string]interface{}) (string, error) {
 	t, err := template.New("t").Option("missingkey=zero").Parse(source)
 	if err != nil {
