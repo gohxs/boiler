@@ -30,6 +30,10 @@ const (
 	VARPROJDATE = "projDate"
 )
 
+var (
+	ErrAlreadyExists = errors.New("Already Exists")
+)
+
 // Core This is a projConfig/Proj
 type Core struct {
 	Name        string
@@ -176,7 +180,7 @@ func (c *Core) GetGenerator(name string) *config.Generator {
 	return nil // not found
 }
 
-// Generate uses a generator
+// Generate uses a generator and clone/process any source files
 func (c *Core) Generate(generator string, name string) (err error) {
 
 	// DefaultVars here?
@@ -213,7 +217,60 @@ func (c *Core) Generate(generator string, name string) (err error) {
 		}
 	}
 	return nil
+}
 
+func (c *Core) GeneratorFetch(srcBoiler *Core, genName, localName string) (err error) {
+	if _, ok := c.Config.Generators[localName]; ok {
+		return fmt.Errorf("Generator '%s' already exists", localName)
+	}
+
+	/*srcProj, err := From(srcBoiler)
+	if err != nil {
+		return err
+	}*/
+
+	if !srcBoiler.IsBoiler {
+		return fmt.Errorf("Source '%s' is not a boiler project", srcBoiler)
+	}
+	gen := srcBoiler.GetGenerator(genName)
+	if gen == nil {
+		return fmt.Errorf("Generator '%s' does not exists in '%s'", genName, srcBoiler)
+	}
+
+	newGen := config.Generator{}
+	newGen.Aliases = gen.Aliases // This might conflict with existent
+	newGen.Description = gen.Description
+	newGen.Vars = gen.Vars
+
+	// Create local generator entry
+
+	dirPrefix := time.Now().UTC().Format("20060102150405")
+	dstPath := filepath.Join(c.ProjRoot, BoilerDir, "templates", dirPrefix)
+
+	for _, f := range gen.Files {
+		fsrc := filepath.Join(srcBoiler.ProjRoot, BoilerDir, "templates", f.Source)
+		fdst := filepath.Join(dstPath, f.Source)
+
+		dstDir := filepath.Dir(fdst)
+		err = os.MkdirAll(dstDir, os.FileMode(0755)) // ignore error?
+		if err != nil {
+			break
+		}
+
+		err = CopyFile(fsrc, fdst)
+		if err != nil {
+			break
+		}
+		// Add entry with generated prefix
+		newGen.Files = append(newGen.Files, config.FileTarget{Source: filepath.Join(dirPrefix, f.Source), Target: f.Target})
+	}
+	if err != nil {
+		os.RemoveAll(dstPath) // Remove newly created dir because of error
+		return err
+	}
+	c.Config.Generators[localName] = newGen // entry created
+
+	return c.Save()
 }
 
 // Close if temporary removes src
@@ -223,35 +280,6 @@ func (c *Core) Close() {
 
 	}
 }
-
-//////////////////////
-// GETTERS
-////////
-
-// Config returns configuration
-/*func (c *Core) Config() *config.Config {
-	return &c.config
-}
-
-// Data returns Data from core
-func (c *Core) Data() map[string]interface{} {
-	return c.data
-}
-
-// ProjRoot returns project path in filesystem
-func (c *Core) ProjRoot() string {
-	return c.projRoot
-}
-
-// Name returns proj name
-func (c *Core) Name() string {
-	return c.name
-}
-
-// ContainsConfig true if .boiler/config.yml exists, false otherwise
-func (c *Core) ContainsConfig() bool {
-	return c.containsConfig
-}*/
 
 ////////////////////////////////
 // Specialized factory
