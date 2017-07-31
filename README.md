@@ -318,11 +318,11 @@ $ bp fetch http://github.com/gohxs/boiler-example-boilerplate gofile
 ```
 boiler now has the hability of generating "gofile" `bp add gofile myfile`
 
-
+### Behaviour changes 
+- projects/boilerplates now works with both folder `proj/.boiler` and `proj/boiler`
 
 
 ### TODO:
-- [ ] **Add examples and usecases**
 - [ ] Facilitate way to create new generators from command instead of editing config.yml `bp generator create name`
   - [ ] Add files to generator `bp generator file sourcefile.ext
   - [ ] Add vars to generator `bp generator var name --question "" --default ""`
@@ -333,3 +333,4 @@ boiler now has the hability of generating "gofile" `bp add gofile myfile`
 - [X] Create `init` command which initializes a boiler folder in current work dir
   - [ ] Create commands to add variables to initialization
 - [X] Ability to fetch generators from other projects (NEW 2017-07-30)
+- [X] **Add examples and usecases**

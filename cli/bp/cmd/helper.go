@@ -18,9 +18,9 @@ func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]in
 			data[v.Name] = fl.Value.String()
 			continue
 		}
-		if v.Question == "" && v.Default == "" {
+		/*if v.Question == "" && v.Default == "" {
 			return fmt.Errorf("No flag provided for '%s' and no default/question defined", v.Name)
-		}
+		}*/
 		question, err := boiler.ProcessString(v.Question, data)
 		if err != nil {
 			return err
@@ -34,8 +34,9 @@ func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]in
 			}
 		}
 		if question == "" { // will not ask and try to set default
-			data[v.Name] = value
-			return nil
+			question = v.Name
+			/*data[v.Name] = value
+			return nil*/
 		}
 
 		if value != "" {
