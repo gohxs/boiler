@@ -36,9 +36,7 @@ func ProcessFile(source, dest string, data map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(dest, sourceinfo.Mode())
-
-	return nil
+	return os.Chmod(dest, sourceinfo.Mode())
 
 }
 
@@ -125,7 +123,5 @@ func CopyFile(source, dest string) error {
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(dest, sourceinfo.Mode())
-
-	return nil
+	return os.Chmod(dest, sourceinfo.Mode())
 }
