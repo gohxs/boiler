@@ -1,8 +1,10 @@
-//go:generate go get dev.hexasoftware.com/hxs/genversion
-//go:generate genversion -package boiler -out version.go
 package boiler
 
+//go:generate go get dev.hexasoftware.com/hxs/genversion
+//go:generate genversion -package boiler -out version.go
+
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -28,58 +30,66 @@ const (
 	VARPROJDATE = "projDate"
 )
 
-var (
-	// Global from currentDir if exists
-	global, _ = From(".")
-
-	// Accessors to the global proj (curdir project)
-
-	Generate     = global.Generate
-	GetGenerator = global.GetGenerator
-	Config       = global.Config
-	Data         = global.Data
-	ProjRoot     = global.ProjRoot
-	Name         = global.Name
-)
-
 // Core This is a projConfig/Proj
 type Core struct {
-	name        string
-	config      config.Config
-	data        map[string]interface{}
-	projRoot    string
-	configFile  string
-	userVarFile string
-	isTemporary bool // If temporary such as git temporary sources, remove
+	Name        string
+	Config      config.Config
+	Data        map[string]interface{}
+	ProjRoot    string
+	ConfigFile  string
+	UserVarFile string
+
+	IsBoiler    bool
+	IsTemporary bool // If temporary such as git temporary sources remove
 }
 
 // New instantiate a dumb core
 func New(path string) *Core {
-	return &Core{projRoot: path, data: map[string]interface{}{}}
+	return &Core{ProjRoot: path, Data: map[string]interface{}{}}
 }
 
 //Init initializes core based on config
 func (c *Core) Init() (err error) {
 	// Defaults
-	c.configFile = filepath.Join(c.projRoot, BoilerDir, "config.yml")
-	c.userVarFile = filepath.Join(c.projRoot, BoilerDir, "user.yml")
+	c.ConfigFile = filepath.Join(c.ProjRoot, BoilerDir, "config.yml")
+	c.UserVarFile = filepath.Join(c.ProjRoot, BoilerDir, "user.yml")
+	c.IsBoiler = true
 
 	// Load config
-	err = config.FromFile(c.configFile, &c.config)
-	if err != nil && !os.IsNotExist(err) { // Ignore error if does not exists
+	err = config.FromFile(c.ConfigFile, &c.Config)
+	if os.IsNotExist(err) {
+		c.IsBoiler = false
+	} else if err != nil { // Ignore error if does not exists
 		return err
 		//return err
 	}
 	// Load vars from user.yml if exists
-	userFile, err := ioutil.ReadFile(c.userVarFile)
+	userFile, err := ioutil.ReadFile(c.UserVarFile)
 	if err == nil { // NO ERROR intentional, we only unmarshal if file exists else its ok to go on
-		yaml.Unmarshal(userFile, c.data) // Add to data
+		yaml.Unmarshal(userFile, c.Data) // Add to data
 	}
 
-	if projName, ok := c.data[VARPROJNAME]; ok {
-		c.name = projName.(string)
+	if projName, ok := c.Data[VARPROJNAME]; ok {
+		c.Name = projName.(string)
 	}
 	return nil
+}
+
+// InitProj create a .boiler and .boiler/config.yml in current path?
+func (c *Core) InitProj(name string) (err error) {
+	if c.IsBoiler {
+		return errors.New("Project already exists")
+	}
+	boilerPath := filepath.Join(c.ProjRoot, ".boiler")
+	err = os.Mkdir(boilerPath, os.FileMode(0755))
+	if err != nil {
+		return err
+	}
+
+	c.Data[VARPROJNAME] = name
+	c.Data[VARPROJDATE] = time.Now().UTC()
+
+	return c.Save()
 }
 
 // CloneTo and process the boiler plate to destination
@@ -92,29 +102,58 @@ func (c *Core) CloneTo(dest string) (err error) {
 			return err
 		}
 	}
-	c.name = name
+	c.Name = name
 
-	c.data[VARPROJNAME] = name
-	c.data[VARPROJDATE] = time.Now().UTC()
+	c.Data[VARPROJNAME] = name
+	c.Data[VARPROJDATE] = time.Now().UTC()
 	//fmt.Print("Generating project...\n\n")
 
-	// Setup vars
-	err = ProcessPath(c.projRoot, dest, c.data)
+	// TEMPLATE it will copy files
+	err = ProcessPath(c.ProjRoot, dest, c.Data)
 	if err != nil {
 		return err
 	}
-	ydata, err := yaml.Marshal(c.data)
+	newBoiler, err := From(dest)
 	if err != nil {
 		return err
 	}
-	//mkdir all .boiler in case it does not exists
-	boilerPath := filepath.Join(dest, ".boiler")
+	newBoiler.Data = c.Data // Clone new Data
+
+	return newBoiler.Save()
+
+}
+
+// Save config and user data
+func (c *Core) Save() (err error) {
+	// Save config
+	err = config.SaveFile(c.ConfigFile, &c.Config)
+	if err != nil {
+		return err
+	}
+
+	ydata, err := yaml.Marshal(c.Data)
+	if err != nil {
+		return err
+	}
+	boilerPath := filepath.Join(c.ProjRoot, ".boiler")
 	os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error
 
 	err = ioutil.WriteFile(filepath.Join(boilerPath, "user.yml"), ydata, os.FileMode(0644))
+	return err
 
-	return nil
+}
 
+//SaveData saves .Data vars
+func (c *Core) SaveData() (err error) {
+	ydata, err := yaml.Marshal(c.Data)
+	if err != nil {
+		return err
+	}
+	boilerPath := filepath.Join(c.ProjRoot, ".boiler")
+	os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error
+
+	err = ioutil.WriteFile(filepath.Join(boilerPath, "user.yml"), ydata, os.FileMode(0644))
+	return err
 }
 
 //////////////////////////////////
@@ -124,7 +163,7 @@ func (c *Core) CloneTo(dest string) (err error) {
 // GetGenerator Fetches generator by name/alias
 func (c *Core) GetGenerator(name string) *config.Generator {
 
-	for k, v := range c.config.Generators {
+	for k, v := range c.Config.Generators {
 		if k == name {
 			return &v // Is a copy of?
 		}
@@ -141,15 +180,15 @@ func (c *Core) GetGenerator(name string) *config.Generator {
 func (c *Core) Generate(generator string, name string) (err error) {
 
 	// DefaultVars here?
-	c.data["name"] = name // Name or target
-	c.data[VARPROJROOT] = c.ProjRoot()
-	c.data["time"] = time.Now().UTC() //curTime
-	c.data["curdir"], _ = os.Getwd()  //currentDir (useful for file paths in config)?
+	c.Data["name"] = name // Name or target
+	c.Data[VARPROJROOT] = c.ProjRoot
+	c.Data["time"] = time.Now().UTC() //curTime
+	c.Data["curdir"], _ = os.Getwd()  //currentDir (useful for file paths in config)?
 
 	gen := c.GetGenerator(generator)
 	// Each file
 	for _, f := range gen.Files {
-		targetFile, err := ProcessString(f.Target, c.data)
+		targetFile, err := ProcessString(f.Target, c.Data)
 		if err != nil {
 			return err
 		}
@@ -162,13 +201,13 @@ func (c *Core) Generate(generator string, name string) (err error) {
 		if !strings.HasSuffix(targetFile, ext) {
 			targetFile += ext
 		}
-		srcPath := filepath.Join(c.projRoot, ".boiler", "templates", f.Source)
+		srcPath := filepath.Join(c.ProjRoot, ".boiler", "templates", f.Source)
 		fmt.Println("Generating file:", targetFile)
 
 		// Create dir
 		dir, _ := filepath.Split(targetFile)
 		os.MkdirAll(dir, os.FileMode(0755))
-		err = ProcessPath(srcPath, targetFile, c.data)
+		err = ProcessPath(srcPath, targetFile, c.Data)
 		if err != nil {
 			return err
 		}
@@ -176,9 +215,11 @@ func (c *Core) Generate(generator string, name string) (err error) {
 	return nil
 
 }
+
+// Close if temporary removes src
 func (c *Core) Close() {
-	if c.isTemporary {
-		defer os.RemoveAll(c.projRoot)
+	if c.IsTemporary {
+		defer os.RemoveAll(c.ProjRoot)
 
 	}
 }
@@ -188,7 +229,7 @@ func (c *Core) Close() {
 ////////
 
 // Config returns configuration
-func (c *Core) Config() *config.Config {
+/*func (c *Core) Config() *config.Config {
 	return &c.config
 }
 
@@ -206,6 +247,11 @@ func (c *Core) ProjRoot() string {
 func (c *Core) Name() string {
 	return c.name
 }
+
+// ContainsConfig true if .boiler/config.yml exists, false otherwise
+func (c *Core) ContainsConfig() bool {
+	return c.containsConfig
+}*/
 
 ////////////////////////////////
 // Specialized factory
@@ -239,7 +285,7 @@ func From(source string) (*Core, error) {
 				return nil, err
 			}
 			c := New(srcdir)
-			c.isTemporary = true
+			c.IsTemporary = true
 			err = c.Init()
 			if err != nil {
 				c.Close() // Close if init error

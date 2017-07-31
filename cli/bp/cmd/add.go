@@ -11,7 +11,7 @@ import (
 
 // Add Package command
 func init() {
-
+	b := Boiler()
 	// Build flags here too i guess
 	cmd := &cobra.Command{
 		Use:     "add [file]",
@@ -42,15 +42,15 @@ func init() {
 				return
 			}
 
-			gen := boiler.GetGenerator(genName)
+			gen := b.GetGenerator(genName)
 			if gen == nil {
 				cmd.Printf("Generator %s does not exists\n\n", genName)
 				cmd.Help()
 				return
 			}
 
-			flagOrAsk(cmd, gen.Vars, boiler.Data())
-			err := boiler.Generate(genName, name)
+			flagOrAsk(cmd, gen.Vars, b.Data)
+			err := b.Generate(genName, name)
 			if err != nil {
 				cmd.Println(err)
 			}
@@ -61,7 +61,7 @@ func init() {
 	// Flag for listing
 
 	// Build sub commands from gen:
-	for k, v := range boiler.Config().Generators {
+	for k, v := range b.Config.Generators {
 		gen := v
 		genName := k
 		subCmd := cobra.Command{
@@ -74,15 +74,15 @@ func init() {
 					return
 				}
 
-				flagOrAsk(cmd, gen.Vars, boiler.Data())
-				err := boiler.Generate(genName, args[0])
+				flagOrAsk(cmd, gen.Vars, b.Data)
+				err := b.Generate(genName, args[0])
 				if err != nil {
 					cmd.Println(err)
 				}
 			},
 		}
 		for _, f := range gen.Vars {
-			flagDefault, _ := boiler.ProcessString(f.Default, boiler.Data())
+			flagDefault, _ := boiler.ProcessString(f.Default, b.Data)
 			flParts := strings.Split(f.Flag, ",")
 			if len(flParts) > 1 {
 				subCmd.Flags().StringP(strings.TrimSpace(flParts[0]), strings.TrimSpace(flParts[1]), flagDefault, f.Question)

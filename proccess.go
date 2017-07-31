@@ -58,7 +58,7 @@ func ProcessPath(srcPath, dstPath string, data map[string]interface{}) error {
 
 		return err
 	}
-	// Destination is dir
+	// Source is dir so, Destination is dir
 	err = os.MkdirAll(dstPath, sourceinfo.Mode())
 	if err != nil {
 		return err

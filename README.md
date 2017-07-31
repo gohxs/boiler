@@ -1,9 +1,9 @@
-Boiler (name WIP)
+Boiler
 =======================
 Simple tool written in go to assist project creation from boilerplates with go text/templates
 
 This tool can help in the create of new projects with a template project structure 
-and also 
+and also to generate units by configuring generators 
 
 Follow this [walkthrough](/WALKTHROUGH.md) to create a simple boilerplate
 
@@ -17,6 +17,8 @@ Content
 * [Usage](#usage)
   * [create command](cmd-create)
   * [add command](cmd-add)
+  * [init command](cmd-init)
+  * [generators command](cmd-generators)
 
 
 <a name="install"></a>
@@ -32,7 +34,7 @@ Basic usage:
 ```
 bp create boilerplate/path proj1
 ```
-
+OR
 ```
 bp create http://github.com/gohxs/boiler-example-boilerplate proj1
 cd proj1
@@ -69,44 +71,18 @@ boiler-example
 <a name="config-file"></a>
 #### File: .boiler/config.yml
 ```yaml
-description: |  ## Descriptive text to show when creating a project from this boileplate
-  ______       ___________            
-  ___  /__________(_)__  /____________
-  __  __ \  __ \_  /__  /_  _ \_  ___/
-  _  /_/ / /_/ /  / _  / /  __/  /    
-  /_.___/\____//_/  /_/  \___//_/.
-  Test boilerplate for boiler cli app
-
-vars: #list of variables for initialization
-  - {name: author , default: No author, question: Ask something about author}
-  - {name: description, default: Awesome app, question: Ask something about description}
-
-generators:
-  gofile:
-    aliases: [.go]
-    description: Creates a go file based on template                # Description for help page
-    files:                                                          # Files to be processed, this files are in .boiler/template/... folder
-      - {source: gofile.go.boiler, target: "{{.curdir}}/{{.name}}"} # target is processed with template
-    vars:                                                           # List of variables for unit creation
-      - name: package
-        default: "{{.projName}}"                                    # default is processed with template
-        flag: "package, p"                                          # flags that can be used in bp add gofile --package main
-        question: package name of the new file                      # question to be shown on interactive input
-        description: Package to place on package thing              # description of the var
-  puretxt:
-    description: Clones pure.txt file
-    aliases: [.txt]
-    files:
-      - {source: pure.txt, target: "{{.curdir}}/{{.name}}" }
-  package:
-    description: Creates a package for app
-    files:
-      - {source: controller/pkg.go.boiler, target: "{{.projRoot}}/{{.name}}/{{.name}}"}
-      - {source: controller/pkg_test.go.boiler, target: "{{.projRoot}}/{{.name}}/{{.name}}_test"}
-``` 
-
-config.yml root object
-
+description: description text
+vars: 
+	- {name: var1,...}
+generators: 
+	name1: 
+		description: generator description
+		aliases: [alias1,alias2]
+		files: {source: source, target: target}
+		vars: {name: var1,...}
+	name2: ...
+```
+root
 * `description` description of the overall boilerplate usually show on creation
 * `vars` variables to be used in further templates
 * `generators` list of *generator* objects 
@@ -121,10 +97,11 @@ config.yml root object
 **generator** object describes a unit creation
 
 * `description` - description of generator, generally used in cli help 
-* `aliases`     - Array containing aliases while calling `bp add [name/aliases]`
+* `aliases`     - Array containing aliases while calling `bp add [name/aliases]` if a name or alias contains a dot (e.g .txt) it will be matches while calling 'bp add file.txt'
 * `files`       - Array of File objects {source, target} files used as source to be copied to destination
 * `vars`        - vars describing either flag/user input these will be used in templates
-	
+
+[Sample file](cli/bp/_test/boilerplate/.boiler/config.yml) Used in test
 
 
 ---------------------
@@ -270,17 +247,87 @@ gofile:
 basically using the command as `bp add myfile.go` is the same as `bp add gofile myfile.go` bp checks the extension of desired file `.go`
 and fetches a generator with that name/alias
 
+--------------
+<a name="cmd-init"></a>
+#### init command <sub>new 31-07-2017</sub>
+```
+Initialize .boiler in current dir
+
+Usage:
+  bp init [name] [flags]
+
+Aliases:
+  init, i
+
+Flags:
+  -h, --help   help for init
+```
+
+This command will prepare the current folder with boiler files
+
+* .boiler/config.yml
+* .boiler/user.yml
+
+*NOTE:* the command will fail if the current folder is a child of a boiler project (i.e any parent contains .boiler/config.yml)  
+
+--------------
+<a name="cmd-generators"></a>
+#### generators command <sub>new 31-07-2017</sub>
+```
+generators related commands
+
+Usage:
+  bp generators [command]
+
+Available Commands:
+  fetch       Fetch generators from other boilerplates
+  list        List generators of the current boilerplate
+
+Flags:
+  -h, --help   help for generators
+
+Use "bp generators [command] --help" for more information about a command.
+```
+##### list 
+this will show a list of the current project available generators (usefull for bash completion)  
+
+Example:
+```bash
+$ bp generators list
+```
+  
+  
+##### fetch
+Fetch allows you to fetch generators and source files from other repositories without having to init a whole new project
+```
+Fetch generators from other boilerplate
+
+Usage:
+  bp generators fetch [boilerplate/project] [generator name] <local name> [flags]
+
+Flags:
+  -h, --help   help for fetch
+```
+
+Example:  
+```bash
+$ bp init projname
+$ bp fetch http://github.com/gohxs/boiler-example-boilerplate gofile 
+```
+boiler now has the hability of generating "gofile" `bp add gofile myfile`
+
+
 
 
 ### TODO:
-- [X] Improve package naming of core
-- [-] Maybe merge config package into (core) package? 
-- [ ] Create `init` command which initializes a boiler folder in current work dir
-  - [ ] Create commands to add variables to initialization
-- [ ] Facilitate way to Add new generators from command instead of editing config.yml `bp generator create name`
+- [ ] **Add examples and usecases**
+- [ ] Facilitate way to create new generators from command instead of editing config.yml `bp generator create name`
   - [ ] Add files to generator `bp generator file sourcefile.ext
   - [ ] Add vars to generator `bp generator var name --question "" --default ""`
 - [ ] Add more test cases within boiler (currently there is tests on cli)
-- [ ] Remove global core from boiler and use it on cmd/main
-  
-
+- [X] Remove global core from boiler and use it on cmd/main
+- [X] Clone generators only from other project/boilerplates `bp generators fetch`
+- [X] Improve package naming of core
+- [X] Create `init` command which initializes a boiler folder in current work dir
+  - [ ] Create commands to add variables to initialization
+- [X] Ability to fetch generators from other projects (NEW 2017-07-30)

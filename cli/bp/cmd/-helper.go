@@ -22,9 +22,12 @@ func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]in
 		if err != nil {
 			return err
 		}
-		value, err := boiler.ProcessString(v.Default, data)
-		if err != nil {
-			return err
+		value, ok := data[v.Name] // First we check on data, then on Processed default
+		if !ok {
+			value, err = boiler.ProcessString(v.Default, data)
+			if err != nil {
+				return err
+			}
 		}
 		fmt.Printf("%s [%s] (%s)? ", question, v.Name, value)
 		line, _, _ := in.ReadLine()

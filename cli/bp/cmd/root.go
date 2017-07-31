@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/gohxs/boiler"
 	"github.com/spf13/cobra"
 )
 
@@ -11,7 +12,7 @@ const (
 	bash_completion_func = `
 __boiler_get_generator()
 {
-    if boiler_output=$(bp generators); then
+    if boiler_output=$(bp generators list); then
         out=$(echo "${boiler_output}")
         COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
     fi
@@ -34,7 +35,8 @@ var (
 	// RootCmd of application
 	RootCmd = &cobra.Command{Use: os.Args[0], BashCompletionFunction: bash_completion_func}
 	// Stdin for cli app
-	Stdin io.Reader = os.Stdin
+	Stdin   io.Reader = os.Stdin
+	gboiler *boiler.Core
 )
 
 func init() {
@@ -54,5 +56,17 @@ func init() {
 		}
 		RootCmd.Help()
 	}
+}
 
+// Boiler Singleton?
+func Boiler() *boiler.Core {
+	var err error
+	if gboiler != nil {
+		return gboiler
+	}
+	gboiler, err = boiler.From(".")
+	if err != nil {
+		panic(err)
+	}
+	return gboiler
 }

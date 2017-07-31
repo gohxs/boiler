@@ -28,7 +28,7 @@ func TestInit(t *testing.T) {
 	buf := bytes.NewBuffer([]byte("Testing\ntest")) // First "Testing" second "test"
 
 	cmd.Stdin = buf
-	os.Args = []string{"", "create", "boilerplate", proj}
+	os.Args = []string{"", "new", "boilerplate", proj}
 	err := cmd.RootCmd.Execute()
 	tu.eq(err, nil)
 
@@ -47,7 +47,7 @@ func TestInit2(t *testing.T) {
 	defer os.RemoveAll(proj)
 	tu := testUtil{t}
 
-	os.Args = []string{"", "create", "boilerplate2", proj}
+	os.Args = []string{"", "new", "boilerplate2", proj}
 	err := cmd.RootCmd.Execute()
 	tu.eq(err, nil)
 

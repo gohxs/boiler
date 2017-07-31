@@ -9,8 +9,8 @@ import (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:     "create [repository/source] [projname]",
-		Aliases: []string{"c"},
+		Use:     "new [repository/source] [projname]",
+		Aliases: []string{"n", "create"},
 		Short:   "Create new project from a boilerplate",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 2 {
@@ -35,10 +35,10 @@ func init() {
 			}
 			defer c.Close()
 
-			cmd.Println(c.Config().Description)
+			cmd.Println(c.Config.Description)
 			cmd.Println("-----")
 			// Set vars on cur Plate
-			flagOrAsk(cmd, c.Config().UserVars, c.Data())
+			flagOrAsk(cmd, c.Config.UserVars, c.Data)
 
 			cmd.Print("Generating project...\n")
 			err = c.CloneTo(dest)
@@ -47,7 +47,7 @@ func init() {
 				return
 			}
 
-			cmd.Println("Created project:", dest, c.Data()["projName"])
+			cmd.Println("Created project:", dest, c.Data["projName"])
 
 		},
 	}

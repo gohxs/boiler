@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"os"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -25,4 +26,19 @@ func FromFile(configPath string, config *Config) error {
 	}
 	return nil
 
+}
+
+// SaveFile marshals into file
+func SaveFile(configPath string, config *Config) error {
+
+	bdata, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(configPath, bdata, os.FileMode(0644))
+	if err != nil {
+		return err
+	}
+	return nil
 }

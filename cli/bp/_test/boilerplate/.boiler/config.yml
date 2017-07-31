@@ -13,21 +13,22 @@ vars: # Variables to be used in boiler files templates
 generators: # Generator after the boilerplate project is created, these are used to create units
   gofile:
     aliases: [.go]
-    description: Creates a go file based on template
-    files: 
-      - {source: gofile.go.boiler, target: "{{.curdir}}/{{.name}}"}
-    vars:
-      - name: package
-        default: "{{.projName}}"
-        flag: "package, p"
-        question: package name of the new file
-        description: Package to place on package thing
+    description: Creates a go file based on template                   # Description for --help
+    files:                                                             # Files or folders to be processed, these files are relative to $PROJROOT/.boiler/template/...
+      - {source: gofile.go.boiler, target: "{{.curdir}}/{{.name}}"}    # Target is processed with template
+    vars:                                                              # List of variables for unit creation
+      - name: package                                                  # Var name {{.package}}
+        default: "{{.projName}}"                                       # Default value 
+        flag: "package, p"                                             # command flags to set this var
+        question: package name of the new file                         # question to be shown on interactive input
+        description: Package to place on package thing                 # description of the var '--help'
         
   puretxt:
     description: Clones pure.txt file
     aliases: [.txt]
     files:
       - {source: pure.txt, target: "{{.curdir}}/{{.name}}" }
+
   package:
     description: Creates a package for app
     files:
