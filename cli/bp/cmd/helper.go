@@ -16,12 +16,16 @@ func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]in
 		fl := cmd.Flag(v.Name)
 		if fl != nil && fl.Changed {
 			data[v.Name] = fl.Value.String()
-			return
+			continue
+		}
+		if v.Question == "" && v.Default == "" {
+			return fmt.Errorf("No flag provided for '%s' and no default/question defined", v.Name)
 		}
 		question, err := boiler.ProcessString(v.Question, data)
 		if err != nil {
 			return err
 		}
+
 		value, ok := data[v.Name] // First we check on data, then on Processed default
 		if !ok {
 			value, err = boiler.ProcessString(v.Default, data)
@@ -29,6 +33,12 @@ func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]in
 				return err
 			}
 		}
+
+		if question == "" { // will not ask and try to set default
+			data[v.Name] = value
+			return nil
+		}
+
 		fmt.Printf("%s [%s] (%s)? ", question, v.Name, value)
 		line, _, _ := in.ReadLine()
 		if len(line) != 0 {

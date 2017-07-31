@@ -1,0 +1,13 @@
+description: ""
+vars: []
+generators:
+  generic: 
+    files:
+      - {source: generic.go.boiler, target: "{{.curdir}}/Slice{{.type}}"}
+      - {source: generic_test.go.boiler, target: "{{.curdir}}/Slice{{.type}}_test"}
+      - {source: damstruct.go.boiler, target: "{{.curdir}}/damstruct"}
+    vars:
+      - {name: type, flag: "type, t"}
+      - {name: package, flag: "package, p", default: "{{.basedir}}"}
+
+

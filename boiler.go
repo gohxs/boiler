@@ -22,8 +22,6 @@ import (
 const (
 	// BoilerExt extension of boiler files
 	BoilerExt = ".boiler"
-	// BoilerDir directory name inside the boiler project
-	BoilerDir = ".boiler"
 	//VARPROJNAME project name data key
 	VARPROJNAME = "projName"
 	//VARPROJROOT project root data key
@@ -32,12 +30,19 @@ const (
 	VARPROJDATE = "projDate"
 )
 
+var (
+	// BoilerDir possible boiler paths in project
+	BoilerDir = []string{".boiler", "boiler"}
+)
+
 // Core This is a projConfig/Proj
 type Core struct {
-	Name        string
-	Config      config.Config
-	Data        map[string]interface{}
-	ProjRoot    string
+	Name      string
+	Config    config.Config
+	Data      map[string]interface{}
+	ProjRoot  string
+	BoilerDir string
+
 	ConfigFile  string
 	UserVarFile string
 
@@ -52,9 +57,20 @@ func New(path string) *Core {
 
 //Init initializes core based on config
 func (c *Core) Init() (err error) {
+	// Find boiler dir
+	boilerDir := BoilerDir[0]
+	for _, dir := range BoilerDir {
+		_, err = os.Stat(filepath.Join(c.ProjRoot, dir)) // again??
+		if err == nil {                                  // Non error
+			boilerDir = dir // Found dir
+			break
+		}
+	}
+	c.BoilerDir = filepath.Join(c.ProjRoot, boilerDir)
+
 	// Defaults
-	c.ConfigFile = filepath.Join(c.ProjRoot, BoilerDir, "config.yml")
-	c.UserVarFile = filepath.Join(c.ProjRoot, BoilerDir, "user.yml")
+	c.ConfigFile = filepath.Join(c.BoilerDir, "config.yml")
+	c.UserVarFile = filepath.Join(c.BoilerDir, "user.yml")
 	c.IsBoiler = true
 
 	// Load config
@@ -77,6 +93,11 @@ func (c *Core) Init() (err error) {
 	if projName, ok := c.Data[VARPROJNAME]; ok {
 		c.Name = projName.(string)
 	}
+	c.Data[VARPROJROOT] = c.ProjRoot
+	c.Data["time"] = time.Now().UTC() //curTime
+	c.Data["curdir"], _ = os.Getwd()  //currentDir (useful for file paths in config)?
+	c.Data["basedir"] = filepath.Base(c.Data["curdir"].(string))
+
 	return nil
 }
 
@@ -85,8 +106,7 @@ func (c *Core) InitProj(name string) (err error) {
 	if c.IsBoiler {
 		return errors.New("Project already exists")
 	}
-	boilerPath := filepath.Join(c.ProjRoot, ".boiler")
-	err = os.Mkdir(boilerPath, os.FileMode(0755))
+	err = os.Mkdir(c.BoilerDir, os.FileMode(0755))
 	if err != nil {
 		return err
 	}
@@ -140,14 +160,12 @@ func (c *Core) Save() (err error) {
 	if err != nil {
 		return err
 	}
-	boilerPath := filepath.Join(c.ProjRoot, ".boiler")
-	err = os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error?
+	err = os.MkdirAll(c.BoilerDir, os.FileMode(0755)) // ignore error?
 	if err != nil {
-		return err
+		// Ignore error
 	}
 
-	err = ioutil.WriteFile(filepath.Join(boilerPath, "user.yml"), ydata, os.FileMode(0644))
-	return err
+	return ioutil.WriteFile(c.UserVarFile, ydata, os.FileMode(0644))
 
 }
 
@@ -157,14 +175,11 @@ func (c *Core) SaveData() (err error) {
 	if err != nil {
 		return err
 	}
-	boilerPath := filepath.Join(c.ProjRoot, ".boiler")
-	err = os.MkdirAll(boilerPath, os.FileMode(0755)) // ignore error
+	err = os.MkdirAll(c.BoilerDir, os.FileMode(0755)) // ignore error
 	if err != nil {
-		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(boilerPath, "user.yml"), ydata, os.FileMode(0644))
-	return err
+	return ioutil.WriteFile(c.UserVarFile, ydata, os.FileMode(0644))
 }
 
 //////////////////////////////////
@@ -192,9 +207,6 @@ func (c *Core) Generate(generator string, name string) (err error) {
 
 	// DefaultVars here?
 	c.Data["name"] = name // Name or target
-	c.Data[VARPROJROOT] = c.ProjRoot
-	c.Data["time"] = time.Now().UTC() //curTime
-	c.Data["curdir"], _ = os.Getwd()  //currentDir (useful for file paths in config)?
 
 	gen := c.GetGenerator(generator)
 	// Each file
@@ -204,15 +216,15 @@ func (c *Core) Generate(generator string, name string) (err error) {
 			return err
 		}
 		ext := filepath.Ext(f.Source)
-		if ext == ".boiler" {
-			ext = filepath.Ext(f.Source[:len(f.Source)-7])
+		if ext == BoilerExt {
+			ext = filepath.Ext(f.Source[:len(f.Source)-len(BoilerExt)])
 		}
 
 		//log.Println("Ext is :", ext)
 		if !strings.HasSuffix(targetFile, ext) {
 			targetFile += ext
 		}
-		srcPath := filepath.Join(c.ProjRoot, ".boiler", "templates", f.Source)
+		srcPath := filepath.Join(c.BoilerDir, "templates", f.Source)
 		fmt.Println("Generating file:", targetFile)
 
 		// Create dir
@@ -257,10 +269,10 @@ func (c *Core) GeneratorFetch(srcBoiler *Core, genName, localName string) (err e
 	// Create local generator entry
 
 	dirPrefix := time.Now().UTC().Format("20060102150405")
-	dstPath := filepath.Join(c.ProjRoot, BoilerDir, "templates", dirPrefix)
+	dstPath := filepath.Join(c.ProjRoot, c.BoilerDir, "templates", dirPrefix)
 
 	for _, f := range gen.Files {
-		fsrc := filepath.Join(srcBoiler.ProjRoot, BoilerDir, "templates", f.Source)
+		fsrc := filepath.Join(srcBoiler.ProjRoot, c.BoilerDir, "templates", f.Source)
 		fdst := filepath.Join(dstPath, f.Source)
 
 		dstDir := filepath.Dir(fdst)
@@ -312,7 +324,8 @@ func From(source string) (*Core, error) {
 		if err != nil {
 			return nil, err
 		}
-		// Git to tmpdir // Maybe move this to cmd
+
+		// Git to tmpdir // Maybe move this to cmd???
 		if u.Scheme == "http" || u.Scheme == "https" || u.Scheme == "git" {
 			srcdir, err = ioutil.TempDir(os.TempDir(), "boiler")
 			if err != nil {
@@ -340,7 +353,7 @@ func From(source string) (*Core, error) {
 	if err != nil {
 		return nil, err
 	}
-	// check if exists
+	// check if exists? or already in solveProjRoot?
 	_, err = os.Stat(srcdir)
 	if err != nil {
 		return nil, err
@@ -348,5 +361,6 @@ func From(source string) (*Core, error) {
 	// TempCore
 	c := New(srcdir)
 	err = c.Init()
+
 	return c, err
 }

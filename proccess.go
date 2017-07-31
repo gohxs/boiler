@@ -11,13 +11,27 @@ import (
 	"text/template"
 )
 
+var (
+	funcMap template.FuncMap
+)
+
+func init() {
+
+	funcMap = template.FuncMap{
+		"Capitalize": strings.Title,
+	}
+
+}
+
 // ProcessFile as template using data
 func ProcessFile(source, dest string, data map[string]interface{}) error {
 	//fsrc, err := os.Open(source)
-	tmpl, err := template.ParseFiles(source)
+	tmpl, err := template.New(filepath.Base(source)).Option("missingkey=zero").Funcs(funcMap).ParseFiles(source)
 	if err != nil {
+		log.Println("Has ERR", err)
 		return err
 	}
+
 	_, err = os.Stat(dest)
 	if !os.IsNotExist(err) {
 		return os.ErrExist
@@ -29,7 +43,10 @@ func ProcessFile(source, dest string, data map[string]interface{}) error {
 	}
 	defer fdst.Close()
 
-	tmpl.Execute(fdst, data)
+	err = tmpl.Execute(fdst, data)
+	if err != nil {
+		return err
+	}
 
 	// Chmod to same as source
 	sourceinfo, err := os.Stat(source)
@@ -62,6 +79,9 @@ func ProcessPath(srcPath, dstPath string, data map[string]interface{}) error {
 		return err
 	}
 	entries, err := ioutil.ReadDir(srcPath)
+	if err != nil {
+		return err
+	}
 
 	for _, v := range entries {
 		// Ignore git or others?
@@ -89,6 +109,7 @@ func ProcessString(source string, data map[string]interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	t = t.Funcs(funcMap)
 	queryBuf := &bytes.Buffer{}
 	t.Execute(queryBuf, data)
 

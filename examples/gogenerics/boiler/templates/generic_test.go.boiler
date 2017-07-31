@@ -1,0 +1,38 @@
+package {{.package}}
+
+import "testing"
+
+
+func Test{{.type |Capitalize}}Add(t *testing.T) {
+
+	t.Log("Add for {{.type}}")
+	vl := Slice{{.type}}{}
+
+
+	vl.Add(new({{.type}}))
+	vl.Add(new({{.type}}))
+	vl.Add(new({{.type}}))
+
+	v := len(vl)
+	t.Log("len(vl) : ",v)
+	if v != 3 {
+		t.FailNow()
+	}
+
+}
+func Test{{.type | Capitalize}}IndexOf( t *testing.T  ) {
+	t.Log("Index of {{.type}}")
+	vl := Slice{{.type}}{}
+	
+	v2 := new({{.type}})
+	vl.Add(new({{.type}}))
+	vl.Add(v2)
+	vl.Add(new({{.type}}))
+
+	v := vl.IndexOf(v2)
+	t.Log("IndexOf v2 ==",v)	
+	
+	if v != 1 {
+		t.FailNow()
+	}
+}

@@ -1,0 +1,7 @@
+package {{.package}}
+
+// DamStruct thing
+type DamStruct struct {
+	Name  string
+	Value int
+}

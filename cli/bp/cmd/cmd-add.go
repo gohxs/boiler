@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -49,8 +50,13 @@ func init() {
 				return
 			}
 
-			flagOrAsk(cmd, gen.Vars, b.Data)
-			err := b.Generate(genName, name)
+			err := flagOrAsk(cmd, gen.Vars, b.Data)
+			if err != nil {
+				cmd.Println(err)
+				return
+			}
+
+			err = b.Generate(genName, name)
 			if err != nil {
 				cmd.Println(err)
 			}
@@ -74,20 +80,27 @@ func init() {
 					return
 				}
 
-				flagOrAsk(cmd, gen.Vars, b.Data)
-				err := b.Generate(genName, args[0])
+				err := flagOrAsk(cmd, gen.Vars, b.Data)
+				if err != nil {
+					cmd.Println(err)
+					return
+				}
+				err = b.Generate(genName, args[0])
 				if err != nil {
 					cmd.Println(err)
 				}
 			},
 		}
+		b.Data["curdir"], _ = os.Getwd()
 		for _, f := range gen.Vars {
 			flagDefault, _ := boiler.ProcessString(f.Default, b.Data)
-			flParts := strings.Split(f.Flag, ",")
-			if len(flParts) > 1 {
-				subCmd.Flags().StringP(strings.TrimSpace(flParts[0]), strings.TrimSpace(flParts[1]), flagDefault, f.Question)
-			} else {
-				subCmd.Flags().String(f.Flag, flagDefault, f.Question)
+			if f.Flag != "" {
+				flParts := strings.Split(f.Flag, ",")
+				if len(flParts) > 1 {
+					subCmd.Flags().StringP(strings.TrimSpace(flParts[0]), strings.TrimSpace(flParts[1]), flagDefault, f.Question)
+				} else {
+					subCmd.Flags().String(f.Flag, flagDefault, f.Question)
+				}
 			}
 		}
 		//flagFromVars(cmd.Flags(), gen.Vars)

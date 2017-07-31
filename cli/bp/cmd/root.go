@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -66,7 +67,7 @@ func Boiler() *boiler.Core {
 	}
 	gboiler, err = boiler.From(".")
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
 	return gboiler
 }

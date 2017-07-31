@@ -15,10 +15,12 @@ func solveProjRoot(start string) (string, error) {
 	for f := cwd; f != ""; cwd, f = path.Split(cwd) {
 		cwd = filepath.Clean(cwd)
 		//log.Println("Cwd", cwd)
-		boilerpath := filepath.Join(cwd, ".boiler")
-		st, err := os.Stat(boilerpath)
-		if err == nil && st.IsDir() { // ignore error
-			return cwd, nil
+		for _, dir := range BoilerDir { // Several possibilities
+			boilerpath := filepath.Join(cwd, dir)
+			st, err := os.Stat(boilerpath)
+			if err == nil && st.IsDir() { // ignore error
+				return cwd, nil
+			}
 		}
 	}
 
