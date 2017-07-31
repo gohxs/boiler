@@ -13,7 +13,7 @@ Content
 * [Basic usage](#basic-usage)
 * [bash completion](#bash-completion)
 * [boilerplate structure](#boilerplate-structure)
-	* [Example config file](#config-file)
+	* [config.yml](#config-file)
 * [Usage](#usage)
   * [create command](cmd-create)
   * [add command](cmd-add)
