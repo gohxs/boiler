@@ -14,11 +14,11 @@ Content
 * [bash completion](#bash-completion)
 * [boilerplate structure](#boilerplate-structure)
 	* [config.yml](#config-file)
-* [Usage](#usage)
-  * [create command](cmd-create)
-  * [add command](cmd-add)
-  * [init command](cmd-init)
-  * [generators command](cmd-generators)
+* [Commands](#usage)
+  * [create/new](cmd-create)
+  * [add](cmd-add)
+  * [init](cmd-init)
+  * [generators](cmd-generators)
 
 
 <a name="install"></a>
