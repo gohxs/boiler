@@ -73,14 +73,14 @@ boiler-example
 ```yaml
 description: description text
 vars: 
-	- {name: var1,...}
+  - {name: var1,...}
 generators: 
-	name1: 
-		description: generator description
-		aliases: [alias1,alias2]
-		files: {source: source, target: target}
-		vars: {name: var1,...}
-	name2: ...
+  name1: 
+    description: generator description
+    aliases: [alias1,alias2]
+    files: {source: source, target: target}
+    vars: {name: var1,...}
+  name2: ...
 ```
 root
 * `description` description of the overall boilerplate usually show on creation
