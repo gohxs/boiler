@@ -33,13 +33,17 @@ func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]in
 				return err
 			}
 		}
-
 		if question == "" { // will not ask and try to set default
 			data[v.Name] = value
 			return nil
 		}
 
-		fmt.Printf("%s [%s] (%s)? ", question, v.Name, value)
+		if value != "" {
+			fmt.Printf("%s (%s): ", question, value)
+		} else {
+			fmt.Printf("%s: ", question)
+
+		}
 		line, _, _ := in.ReadLine()
 		if len(line) != 0 {
 			value = string(line)

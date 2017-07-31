@@ -1,0 +1,11 @@
+{
+  "name": "{{.projName}}",
+  "version": "{{.version}}",
+  "description": "{{or .description ""}}",
+  "main": "{{.entrypoint}}",
+  "scripts": {
+    "test": "{{or .testcmd "echo \"Error: no test specified\" && exit 1"}}"
+  },
+  "author": "{{or .author ""}}",
+  "license": "{{.license}}"
+}

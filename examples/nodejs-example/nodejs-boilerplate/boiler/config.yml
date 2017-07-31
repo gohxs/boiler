@@ -1,0 +1,11 @@
+description: "NodeJS boilerplate example for boiler"
+vars: 
+  - {name: version, question: version, default: 1.0.0}
+  - {name: description, question: description}
+  - {name: entrypoint, question: entry point, default: index.js}
+  - {name: testcmd, question: test command}
+  - {name: gitrepository, question: git repository}
+  - {name: keywords, question: keywords}
+  - {name: author, question: author}
+  - {name: license, question: license, default: ISC}
+generators: {}
