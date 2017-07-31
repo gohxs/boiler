@@ -1,5 +1,7 @@
 Boiler
 =======================
+![report](https://goreportcard.com/badge/github.com/gohxs/boiler)
+
 Simple tool written in go to assist project creation from boilerplates with go text/templates
 
 This tool can help in the create of new projects with a template project structure 
