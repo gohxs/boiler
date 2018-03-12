@@ -10,6 +10,7 @@ import (
 // Config boiler.yaml
 type Config struct {
 	Description string               `yaml:"description"`
+	Files       []FileTarget         `yaml:"files"`
 	UserVars    []UserVar            `yaml:"vars"`
 	Generators  map[string]Generator `yaml:"generators"`
 }

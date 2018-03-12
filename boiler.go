@@ -19,14 +19,12 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+//Boiler consts
 const (
 	// BoilerExt extension of boiler files
-	BoilerExt = ".boiler"
-	//VARPROJNAME project name data key
+	BoilerExt   = ".boiler"
 	VARPROJNAME = "projName"
-	//VARPROJROOT project root data key
 	VARPROJROOT = "projRoot"
-	//VARPROJDATE project init date data key
 	VARPROJDATE = "projDate"
 )
 
@@ -101,7 +99,7 @@ func (c *Core) Init() (err error) {
 	return nil
 }
 
-// InitProj create a .boiler and .boiler/config.yml in current path?
+// InitProj create a .boiler and .boiler/config.yml in current path
 func (c *Core) InitProj(name string) (err error) {
 	if c.IsBoiler {
 		return errors.New("Project already exists")
@@ -127,6 +125,7 @@ func (c *Core) CloneTo(dest string) (err error) {
 			return err
 		}
 	}
+
 	c.Name = name
 
 	c.Data[VARPROJNAME] = name
@@ -138,6 +137,41 @@ func (c *Core) CloneTo(dest string) (err error) {
 	if err != nil {
 		return err
 	}
+	// Process main config files
+	// Each file
+	// IMPLEMENTED 12/03/2018
+	for _, f := range c.Config.Files {
+		targetFile, err := ProcessString(f.Target, c.Data)
+		if err != nil {
+			return err
+		}
+		targetFile = filepath.Join(dest, targetFile)
+
+		ext := filepath.Ext(f.Source)
+		if ext == BoilerExt {
+			ext = filepath.Ext(f.Source[:len(f.Source)-len(BoilerExt)])
+		}
+
+		//log.Println("Ext is :", ext)
+		if !strings.HasSuffix(targetFile, ext) {
+			targetFile += ext
+		}
+		srcPath := filepath.Join(c.BoilerDir, "templates", f.Source)
+		fmt.Println("Generating file:", targetFile)
+
+		// Create dir
+		dir, _ := filepath.Split(targetFile)
+		err = os.MkdirAll(dir, os.FileMode(0755))
+		if err != nil {
+			return err
+		}
+
+		err = ProcessPath(srcPath, targetFile, c.Data)
+		if err != nil {
+			return err
+		}
+	}
+
 	newBoiler, err := From(dest)
 	if err != nil {
 		return err
@@ -155,7 +189,6 @@ func (c *Core) Save() (err error) {
 	if err != nil {
 		return err
 	}
-
 	ydata, err := yaml.Marshal(c.Data)
 	if err != nil {
 		return err

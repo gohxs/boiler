@@ -19,6 +19,11 @@ func init() {
 
 	funcMap = template.FuncMap{
 		"Capitalize": strings.Title,
+		"ToUpper":    strings.ToUpper,
+		"ToLower":    strings.ToLower,
+		"Base": func(name string) string {
+			return filepath.Base(name)
+		},
 	}
 
 }
@@ -26,7 +31,7 @@ func init() {
 // ProcessFile as template using data
 func ProcessFile(source, dest string, data map[string]interface{}) error {
 	//fsrc, err := os.Open(source)
-	tmpl, err := template.New(filepath.Base(source)).Option("missingkey=zero").Funcs(funcMap).ParseFiles(source)
+	t, err := template.New(filepath.Base(source)).Funcs(funcMap).ParseFiles(source)
 	if err != nil {
 		log.Println("Has ERR", err)
 		return err
@@ -43,7 +48,7 @@ func ProcessFile(source, dest string, data map[string]interface{}) error {
 	}
 	defer fdst.Close()
 
-	err = tmpl.Execute(fdst, data)
+	err = t.Execute(fdst, data)
 	if err != nil {
 		return err
 	}
@@ -105,11 +110,10 @@ func ProcessPath(srcPath, dstPath string, data map[string]interface{}) error {
 
 //ProcessString passes a string through template with data
 func ProcessString(source string, data map[string]interface{}) (string, error) {
-	t, err := template.New("t").Option("missingkey=zero").Parse(source)
+	t, err := template.New("t").Option("missingkey=zero").Funcs(funcMap).Parse(source)
 	if err != nil {
 		return "", err
 	}
-	t = t.Funcs(funcMap)
 	queryBuf := &bytes.Buffer{}
 	t.Execute(queryBuf, data)
 

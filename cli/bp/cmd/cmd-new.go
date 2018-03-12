@@ -34,9 +34,13 @@ func init() {
 				return
 			}
 			defer c.Close()
+			c.Name = dest
 
 			cmd.Println(c.Config.Description)
 			cmd.Println("-----")
+			// Default vars too?
+			c.Data["projName"] = dest
+
 			// Set vars on cur Plate
 			flagOrAsk(cmd, c.Config.UserVars, c.Data)
 

@@ -323,6 +323,7 @@ boiler now has the hability of generating "gofile" `bp add gofile myfile`
 
 
 ### TODO:
+- [ ] Recursive generator, if a generator is not found in near boiler we keep looking down the path
 - [ ] Facilitate way to create new generators from command instead of editing config.yml `bp generator create name`
   - [ ] Add files to generator `bp generator file sourcefile.ext
   - [ ] Add vars to generator `bp generator var name --question "" --default ""`

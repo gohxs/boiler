@@ -9,6 +9,7 @@ import (
 	"github.com/gohxs/boiler/cli/bp/cmd"
 )
 
+// main will do the main stuff
 func main() {
 	if err := cmd.RootCmd.Execute(); err != nil {
 		cmd.RootCmd.Println(err)

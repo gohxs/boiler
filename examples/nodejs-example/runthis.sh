@@ -8,6 +8,7 @@ echo "-- Press any key to continue --"
 
 read
 
+## BP COMMAND
 bp new nodejs-boilerplate proj
 
 cat proj/package.json
