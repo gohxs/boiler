@@ -1,0 +1,36 @@
+description: NodeJS boilerplate example for boiler
+files: []
+vars:
+- name: version
+  default: 1.0.0
+  flag: ""
+  question: version
+- name: description
+  default: ""
+  flag: ""
+  question: description
+- name: entrypoint
+  default: index.js
+  flag: ""
+  question: entry point
+- name: testcmd
+  default: ""
+  flag: ""
+  question: test command
+- name: gitrepository
+  default: ""
+  flag: ""
+  question: git repository
+- name: keywords
+  default: ""
+  flag: ""
+  question: keywords
+- name: author
+  default: ""
+  flag: ""
+  question: author
+- name: license
+  default: ISC
+  flag: ""
+  question: license
+generators: {}

@@ -9,5 +9,11 @@ generators:
     vars:
       - {name: type, flag: "type, t"}
       - {name: package, flag: "package, p", default: "{{.basedir}}"}
+      - {
+        name: multiselect, 
+        flag: "multiselect, m", 
+        question: "Select one of these",
+        choices: ["one","two","three"]
+        }
 
 

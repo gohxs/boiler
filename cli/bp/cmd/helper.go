@@ -1,16 +1,17 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
+	"log"
 
+	"github.com/AlecAivazis/survey"
 	"github.com/gohxs/boiler"
 	"github.com/gohxs/boiler/config"
 	"github.com/spf13/cobra"
 )
 
 func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]interface{}) (err error) {
-	in := bufio.NewReader(Stdin)
+	//in := bufio.NewReader(Stdin)
 
 	for _, v := range userVars {
 		fl := cmd.Flag(v.Name)
@@ -35,23 +36,37 @@ func flagOrAsk(cmd *cobra.Command, userVars []config.UserVar, data map[string]in
 		}
 		if question == "" { // will not ask and try to set default
 			question = v.Name
-			/*data[v.Name] = value
-			return nil*/
 		}
 
-		if value != "" {
-			fmt.Printf("%s (%s): ", question, value)
-		} else {
-			fmt.Printf("%s: ", question)
-
+		var answer string
+		if len(v.Choices) > 0 {
+			choices := make([]string, len(v.Choices))
+			for i, c := range v.Choices {
+				choices[i], err = boiler.ProcessString(c, data)
+				if err != nil {
+					return err
+				}
+			}
+			survey.AskOne(&survey.Select{
+				Message: question,
+				Options: choices,
+			},
+				&answer,
+				nil,
+			)
+			log.Println("Choosen:", answer)
+			data[v.Name] = answer
+			continue
 		}
-		line, _, _ := in.ReadLine()
-		if len(line) != 0 {
-			value = string(line)
-		}
-		if value != "" {
-			data[v.Name] = value
-		}
+		// Perform question
+		survey.AskOne(&survey.Input{
+			Message: question + ":",
+			Default: fmt.Sprintf("%s", value),
+		},
+			&answer,
+			nil,
+		)
+		data[v.Name] = answer
 	}
 
 	return nil

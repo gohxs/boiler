@@ -1,0 +1,14 @@
+author: ""
+basedir: nodejs-example
+curdir: /home/stdio/go/src/github.com/gohxs/boiler/examples/nodejs-example
+description: ""
+entrypoint: index.js
+gitrepository: ""
+keywords: ""
+license: ISC
+projDate: 2018-03-16T10:43:36.981958Z
+projName: proj
+projRoot: /home/stdio/go/src/github.com/gohxs/boiler/examples/nodejs-example/nodejs-boilerplate
+testcmd: ""
+time: 2018-03-16T10:43:30.2391375Z
+version: 1.0.0
